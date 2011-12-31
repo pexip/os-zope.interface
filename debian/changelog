@@ -1,0 +1,167 @@
+zope.interface (3.6.1-1ubuntu3) precise; urgency=low
+
+  * Rebuild to drop python2.6 dependencies.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 31 Dec 2011 08:20:10 +0000
+
+zope.interface (3.6.1-1ubuntu2) oneiric; urgency=low
+
+  * Revert previous change on request from Matthias Klose.
+
+ -- Gediminas Paulauskas <menesis@pov.lt>  Thu, 15 Sep 2011 19:34:16 +0300
+
+zope.interface (3.6.1-1ubuntu1) oneiric; urgency=low
+
+  * debian/rules: no longer install zope/__init__.py, dh_python2 will create
+    it for us. (LP: #851038)
+
+ -- Gediminas Paulauskas <menesis@pov.lt>  Thu, 15 Sep 2011 15:21:20 +0300
+
+zope.interface (3.6.1-1build1) oneiric; urgency=low
+
+  * No change rebuild to drop Python 3.1 support.
+
+ -- Barry Warsaw <barry@ubuntu.com>  Fri, 03 Jun 2011 15:29:55 -0400
+
+zope.interface (3.6.1-1) unstable; urgency=low
+
+  * Team upload.
+
+  [ Brian Sutherland ]
+  * New version and incorporate changes from Ubuntu.
+  * Enable python3 packages
+  * Use dh_python2 rather than dh_pycentral (Closes: #617171)
+  * Stop using python-van.pydeb as well, packages has no dependencies or
+    setuptools extras.
+  * Add testing scripts for python3 version of this package.
+  * Backport fixes to C optimizationd from upstream LP: #675064. Reportedly
+    causes a segfault on python3 and 64-bit architectures.
+  * Switch to dpkg-source 3.0 (quilt) format
+
+  [ Arnaud Fontaine ]
+  * debian/control:
+    + Add Vcs-Browser and rename XS-Vcs-Svn to Vcs-Svn (now supported by dpkg).
+    + Bump Standards-Version to 3.9.2. No changes needed.
+    + Remove deprecated XB-Python-Version.
+    + Add Homepage field.
+  * debian/copyright:
+    + Update to last revision.
+
+  [ Matthias Klose ]
+  * The egg doesn't require setuptools. LP: #563060.
+  * Call setup.py install with --install-layout=deb to install into
+    the final location.
+
+ -- Arnaud Fontaine <arnau@debian.org>  Mon, 16 May 2011 20:34:35 +0900
+
+zope.interface (3.6.1-0ubuntu3) natty; urgency=low
+
+  * Build packages for python3.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 23 Feb 2011 18:31:44 +0100
+
+zope.interface (3.6.1-0ubuntu2) natty; urgency=low
+
+  * Rebuild to add support for python 2.7.
+
+ -- Matthias Klose <doko@ubuntu.com>  Fri, 03 Dec 2010 00:18:11 +0000
+
+zope.interface (3.6.1-0ubuntu1) maverick; urgency=low
+
+  * New upstream release.
+  * Don't include C source in the package.
+  * debian/copyright: update, convert to dep5 format
+
+ -- Gediminas Paulauskas <menesis@pov.lt>  Thu, 26 Aug 2010 19:40:15 +0300
+
+zope.interface (3.5.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * Convert to debhelper 7 and the pydeb dh7 extension.
+
+ -- Fabio Tranchitella <kobold@debian.org>  Tue, 22 Dec 2009 13:14:19 +0100
+
+zope.interface (3.5.2-2) unstable; urgency=low
+
+  [ Matthias Klose ]
+  * Set section to zope.
+
+  [ Brian Sutherland ]
+  * Set priority to optional as we are depended on by python-zodb which is
+    priority optional.
+
+  [ Fabio Tranchitella ]
+  * debian/control: build-depend on pyton-vab.pydeb >= 1.3.0-2.
+    (Closes: #552973)
+
+ -- Fabio Tranchitella <kobold@debian.org>  Sun, 08 Nov 2009 11:07:08 +0100
+
+zope.interface (3.5.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: added conflict with zope3.
+
+ -- Fabio Tranchitella <kobold@debian.org>  Fri, 28 Aug 2009 11:47:25 +0200
+
+zope.interface (3.5.1-5) unstable; urgency=low
+
+  * Don't include sources files in the binary package.
+  * Depend on python-pkg-resources instead of python-setuptools.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 26 Aug 2009 09:56:37 +0200
+
+zope.interface (3.5.1-4) unstable; urgency=low
+
+  * Build a python-zope.interface.dbg package.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 25 Aug 2009 19:40:54 +0200
+
+zope.interface (3.5.1-3) unstable; urgency=low
+
+  [ Michael Bienia ]
+  * debian/rules:
+    Use the macros from python.mk to determine the library path for python 2.5
+    and python 2.6, Closes: #537581.
+  * debian/control:
+    Bump the needed version of python-all-dev for this.
+
+  [ Brian Sutherland ]
+  * debian/rules, debian/control: Changes to above patch to be buildable on
+    Lenny. Remove the python.mk include, van.pydeb already includes this
+    conditionally. Revert above bump of python-all-dev.
+
+ -- Brian Sutherland <brian@vanguardistas.net>  Mon, 20 Jul 2009 09:35:10 +0200
+
+zope.interface (3.5.1-2) unstable; urgency=low
+
+  * Fix maintainers/upload.
+  * Use simpler van-pydep call in rules.
+  * Remove python-zopeinterface metapackage as it is not needed.
+  * Make watch file use pypi rather than download.zope.org.
+  * Use the python-van.pydeb template for the rules file.
+
+ -- Fabio Tranchitella <kobold@debian.org>  Thu, 18 Jun 2009 16:11:11 +0200
+
+zope.interface (3.5.1-1) unstable; urgency=low
+
+  * Major re-write/update.
+
+ -- Brian Sutherland <brian@vanguardistas.net>  Tue, 26 May 2009 19:07:43 +0000
+
+python-zope.interface (3.4.0~b1-1) experimental; urgency=low
+
+  * New upstream release
+  * Remove use of dh_python.
+  * Make rules file less strict on version numbers.
+  * Add autopkgtest tests.
+  * Remove previos debian specific patch adding the zope namespace
+    package.
+
+ -- Brian Sutherland <brian@vanguardistas.net>  Mon, 16 Jul 2007 09:04:34 +0200
+
+python-zope.interface (3.3.0b2-1) experimental; urgency=low
+
+  * Initial packaging.
+  * Patch setup.py to declare the zope package as a namespace package.
+
+ -- Brian Sutherland <jinty@web.de>  Thu, 26 Oct 2006 22:41:46 +0200

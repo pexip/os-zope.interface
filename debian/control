@@ -1,0 +1,77 @@
+Source: zope.interface
+Section: zope
+Priority: optional
+Maintainer: Debian/Ubuntu Zope Team <pkg-zope-developers@lists.alioth.debian.org>
+Uploaders: Brian Sutherland <brian@vanguardistas.net>,
+           Fabio Tranchitella <kobold@debian.org>
+Build-Depends: debhelper (>= 7.0.50~),
+               python-all-dev (>= 2.6.6-3~),
+               python-all-dbg,
+               python-setuptools,
+               python3-all-dev,
+               python3-all-dbg, 
+               python3-zope.fixers,
+               python3-setuptools
+Standards-Version: 3.9.2
+X-Python-Version: >= 2.4
+X-Python3-Version: >= 3.1
+Homepage: http://pypi.python.org/pypi/zope.interface
+Vcs-Svn: svn://svn.debian.org/pkg-zope/zope.interface/trunk
+Vcs-Browser: http://svn.debian.org/viewsvn/pkg-zope/zope.interface/trunk
+
+Package: python-zope.interface
+Architecture: any
+Depends: ${python:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Provides: python-zope, python-zopeinterface, ${python:Provides}
+Replaces: python-zope, python-zopeinterface
+Conflicts: python-zope, python-zopeinterface, zope3
+Description: Interfaces for Python
+ This package provides an implementation of object interfaces for Python.
+ Interfaces are a mechanism for labeling objects as conforming to a given API
+ or contract. So, this package can be considered as implementation of the
+ Design By Contract methodology support in Python.
+
+Package: python-zope.interface-dbg
+Priority: extra
+Section: debug
+Architecture: any
+Depends: python-zope.interface (= ${binary:Version}),
+         python-dbg,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Conflicts: python-zopeinterface-dbg
+Replaces: python-zopeinterface-dbg
+Provides: python-zopeinterface-dbg
+Description: Interfaces for Python (debug extension)
+ This package provides an implementation of object interfaces for Python.
+ Interfaces are a mechanism for labeling objects as conforming to a given API
+ or contract. So, this package can be considered as implementation of the
+ Design By Contract methodology support in Python.
+ .
+ This package contains the extension built for the Python debug interpreter.
+
+Package: python3-zope.interface
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Provides: python3-zope, ${python3:Provides}
+Description: Interfaces for Python3
+ This package provides an implementation of object interfaces for Python.
+ Interfaces are a mechanism for labeling objects as conforming to a given API
+ or contract. So, this package can be considered as implementation of the
+ Design By Contract methodology support in Python.
+
+Package: python3-zope.interface-dbg
+Priority: extra
+Section: debug
+Architecture: any
+Depends: python3-zope.interface (= ${binary:Version}),
+         python3-dbg,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Interfaces for Python3 (debug extension)
+ This package provides an implementation of object interfaces for Python.
+ Interfaces are a mechanism for labeling objects as conforming to a given API
+ or contract. So, this package can be considered as implementation of the
+ Design By Contract methodology support in Python.
+ .
+ This package contains the extension built for the Python3 debug interpreter.

@@ -1,0 +1,48 @@
+Backport of 118418 from upstream. Included in 3.6.2 and above. Original change:
+
+ - LP # 675064:  Specify return value type for C optimizations module init 
+   under Python 3:  undeclared value caused warnings, and segfaults on some 
+   64 bit architectures.
+
+--- a/src/zope/interface/_zope_interface_coptimizations.c
++++ b/src/zope/interface/_zope_interface_coptimizations.c
+@@ -1565,8 +1565,7 @@
+ };
+ 
+ #if  PY_MAJOR_VERSION >= 3
+-static char module_doc[] = "C optimizations for zope.interface\n\n"
+-  "$Id: _zope_interface_coptimizations.c 111871 2010-05-02 17:19:14Z tseaver $";
++static char module_doc[] = "C optimizations for zope.interface\n\n";
+ 
+ static struct PyModuleDef _zic_module = {
+ 	PyModuleDef_HEAD_INIT,
+@@ -1581,9 +1580,6 @@
+ };
+ #endif
+ 
+-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+-#define PyMODINIT_FUNC void
+-#endif
+ static PyObject *
+ init(void)
+ {
+@@ -1646,8 +1642,7 @@
+   #if PY_MAJOR_VERSION < 3
+   /* Create the module and add the functions */
+   m = Py_InitModule3("_zope_interface_coptimizations", m_methods,
+-                     "C optimizations for zope.interface\n\n"
+-                     "$Id: _zope_interface_coptimizations.c 111871 2010-05-02 17:19:14Z tseaver $");
++                     "C optimizations for zope.interface\n\n");
+   #else
+   m = PyModule_Create(&_zic_module);
+   #endif
+@@ -1673,8 +1668,8 @@
+   return m;
+ }
+ 
+-#if PY_MAJOR_VERSION < 3
+ PyMODINIT_FUNC
++#if PY_MAJOR_VERSION < 3
+ init_zope_interface_coptimizations(void)
+ {
+   init();

@@ -1,0 +1,3 @@
+#!/bin/bash
+testfilter="-s zope.interface"
+. /usr/share/python-zope.testrunner/test_helper
