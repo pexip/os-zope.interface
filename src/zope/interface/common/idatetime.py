@@ -13,8 +13,6 @@
 
 This module is called idatetime because if it were called datetime the import
 of the real datetime would fail.
-
-$Id: idatetime.py 110736 2010-04-11 10:59:30Z regebro $
 """
 
 from zope.interface import Interface, Attribute

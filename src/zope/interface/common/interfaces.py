@@ -12,8 +12,6 @@
 #
 ##############################################################################
 """Interfaces for standard python exceptions
-
-$Id: interfaces.py 110536 2010-04-06 02:59:44Z tseaver $
 """
 from zope.interface import Interface
 from zope.interface import classImplements
@@ -79,12 +77,15 @@ classImplements(OSError, IOSError)
 classImplements(OverflowError, IOverflowError)
 try:
     classImplements(OverflowWarning, IOverflowWarning)
-except NameError:
+except NameError:  #pragma NO COVER
     pass # OverflowWarning was removed in Python 2.5
 classImplements(ReferenceError, IReferenceError)
 classImplements(RuntimeError, IRuntimeError)
 classImplements(RuntimeWarning, IRuntimeWarning)
-classImplements(StandardError, IStandardError)
+try:
+    classImplements(StandardError, IStandardError)
+except NameError:  #pragma NO COVER
+    pass # StandardError does not exist in Python 3
 classImplements(StopIteration, IStopIteration)
 classImplements(SyntaxError, ISyntaxError)
 classImplements(SyntaxWarning, ISyntaxWarning)

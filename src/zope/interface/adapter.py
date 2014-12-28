@@ -4,7 +4,7 @@
 # All Rights Reserved.
 #
 # This software is subject to the provisions of the Zope Public License,
-# Version 2.0 (ZPL).  A copy of the ZPL should accompany this distribution.
+# Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.
 # THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
 # WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
@@ -12,14 +12,17 @@
 #
 ##############################################################################
 """Adapter management
-
-$Id: adapter.py 110699 2010-04-09 08:16:17Z regebro $
 """
-
 import weakref
-from zope.interface import providedBy, Interface, ro
 
-_marker = object
+from zope.interface import providedBy
+from zope.interface import Interface
+from zope.interface import ro
+from zope.interface._compat import _u
+from zope.interface._compat import _normalize_name
+
+_BLANK = _u('')
+
 class BaseAdapterRegistry(object):
 
     # List of methods copied from lookup sub-objects:
@@ -64,7 +67,7 @@ class BaseAdapterRegistry(object):
         #   Invalidating registries have caches that are invalidated
         #     when they or their base registies change.  An invalidating
         #     registry can only have invalidating registries as bases.
-        #     See LookupBasePy below for the pertinent logic.
+        #     See LookupBaseFallback below for the pertinent logic.
 
         #   Verifying registies can't rely on getting invalidation messages,
         #     so have to check the generations of base registries to determine
@@ -129,7 +132,7 @@ class BaseAdapterRegistry(object):
 
         self.changed(self)
 
-    def registered(self, required, provided, name=u''):
+    def registered(self, required, provided, name=_BLANK):
         required = tuple(map(_convert_None_to_Interface, required))
         name = _normalize_name(name)
         order = len(required)
@@ -200,7 +203,7 @@ class BaseAdapterRegistry(object):
 
     def subscribe(self, required, provided, value):
         required = tuple(map(_convert_None_to_Interface, required))
-        name = u''
+        name = _BLANK
         order = len(required)
         byorder = self._subscribers
         while len(byorder) <= order:
@@ -245,9 +248,10 @@ class BaseAdapterRegistry(object):
             lookups.append((components, k))
             components = d
 
-        old = components.get(u'')
+        old = components.get(_BLANK)
         if not old:
-            return
+            # this is belt-and-suspenders against the failure of cleanup below
+            return  #pragma NO COVERAGE 
 
         if value is None:
             new = ()
@@ -258,16 +262,16 @@ class BaseAdapterRegistry(object):
             return
 
         if new:
-            components[u''] = new
+            components[_BLANK] = new
         else:
-            # Instead of setting components[u''] = new, we clean out
+            # Instead of setting components[_BLANK] = new, we clean out
             # empty containers, since we don't want our keys to
             # reference global objects (interfaces) unnecessarily.  This
             # is often a problem when an interface is slated for
             # removal; a hold-over entry in the registry can make it
             # difficult to remove such interfaces.
-            if u'' in components:
-                del components[u'']
+            if _BLANK in components:
+                del components[_BLANK]
             for comp, k in reversed(lookups):
                 d = comp[k]
                 if d:
@@ -287,14 +291,14 @@ class BaseAdapterRegistry(object):
 
     # XXX hack to fake out twisted's use of a private api.  We need to get them
     # to use the new registed method.
-    def get(self, _):
+    def get(self, _): #pragma NO COVER
         class XXXTwistedFakeOut:
             selfImplied = {}
         return XXXTwistedFakeOut
 
 
 _not_in_mapping = object()
-class LookupBasePy(object):
+class LookupBaseFallback(object):
 
     def __init__(self):
         self._cache = {}
@@ -319,8 +323,9 @@ class LookupBasePy(object):
             cache = c
         return cache
 
-    def lookup(self, required, provided, name=u'', default=None):
+    def lookup(self, required, provided, name=_BLANK, default=None):
         cache = self._getcache(provided, name)
+        required = tuple(required)
         if len(required) == 1:
             result = cache.get(required[0], _not_in_mapping)
         else:
@@ -338,7 +343,7 @@ class LookupBasePy(object):
 
         return result
 
-    def lookup1(self, required, provided, name=u'', default=None):
+    def lookup1(self, required, provided, name=_BLANK, default=None):
         cache = self._getcache(provided, name)
         result = cache.get(required, _not_in_mapping)
         if result is _not_in_mapping:
@@ -349,10 +354,10 @@ class LookupBasePy(object):
 
         return result
 
-    def queryAdapter(self, object, provided, name=u'', default=None):
+    def queryAdapter(self, object, provided, name=_BLANK, default=None):
         return self.adapter_hook(provided, object, name, default)
 
-    def adapter_hook(self, provided, object, name=u'', default=None):
+    def adapter_hook(self, provided, object, name=_BLANK, default=None):
         required = providedBy(object)
         cache = self._getcache(provided, name)
         factory = cache.get(required, _not_in_mapping)
@@ -395,12 +400,22 @@ class LookupBasePy(object):
 
         return result
 
-LookupBase = LookupBasePy
+LookupBasePy = LookupBaseFallback # BBB
 
-class VerifyingBasePy(LookupBasePy):
+try:
+    from _zope_interface_coptimizations import LookupBase
+except ImportError: #pragma NO COVER
+    LookupBase = LookupBaseFallback
+
+
+class VerifyingBaseFallback(LookupBaseFallback):
+    # Mixin for lookups against registries which "chain" upwards, and
+    # whose lookups invalidate their own caches whenever a parent registry
+    # bumps its own '_generation' counter.  E.g., used by 
+    # zope.component.persistentregistry
 
     def changed(self, originally_changed):
-        LookupBasePy.changed(self, originally_changed)
+        LookupBaseFallback.changed(self, originally_changed)
         self._verify_ro = self._registry.ro[1:]
         self._verify_generations = [r._generation for r in self._verify_ro]
 
@@ -411,25 +426,23 @@ class VerifyingBasePy(LookupBasePy):
 
     def _getcache(self, provided, name):
         self._verify()
-        return LookupBasePy._getcache(self, provided, name)
+        return LookupBaseFallback._getcache(self, provided, name)
 
     def lookupAll(self, required, provided):
         self._verify()
-        return LookupBasePy.lookupAll(self, required, provided)
+        return LookupBaseFallback.lookupAll(self, required, provided)
 
     def subscriptions(self, required, provided):
         self._verify()
-        return LookupBasePy.subscriptions(self, required, provided)
+        return LookupBaseFallback.subscriptions(self, required, provided)
 
-VerifyingBase = VerifyingBasePy
-
+VerifyingBasePy = VerifyingBaseFallback #BBB
 
 try:
-    import _zope_interface_coptimizations
-except ImportError:
-    pass
-else:
-    from _zope_interface_coptimizations import LookupBase, VerifyingBase
+    from _zope_interface_coptimizations import VerifyingBase
+except ImportError: #pragma NO COVER
+    VerifyingBase = VerifyingBaseFallback
+
 
 class AdapterLookupBase(object):
 
@@ -502,7 +515,8 @@ class AdapterLookupBase(object):
                 r.subscribe(self)
                 _refs[ref] = 1
 
-    def _uncached_lookup(self, required, provided, name=u''):
+    def _uncached_lookup(self, required, provided, name=_BLANK):
+        required = tuple(required)
         result = None
         order = len(required)
         for registry in self._registry.ro:
@@ -524,7 +538,7 @@ class AdapterLookupBase(object):
 
         return result
 
-    def queryMultiAdapter(self, objects, provided, name=u'', default=None):
+    def queryMultiAdapter(self, objects, provided, name=_BLANK, default=None):
         factory = self.lookup(map(providedBy, objects), provided, name)
         if factory is None:
             return default
@@ -536,6 +550,7 @@ class AdapterLookupBase(object):
         return result
 
     def _uncached_lookupAll(self, required, provided):
+        required = tuple(required)
         order = len(required)
         result = {}
         for registry in reversed(self._registry.ro):
@@ -550,12 +565,13 @@ class AdapterLookupBase(object):
 
         self._subscribe(*required)
 
-        return tuple(result.iteritems())
+        return tuple(result.items())
 
     def names(self, required, provided):
         return [c[0] for c in self.lookupAll(required, provided)]
 
     def _uncached_subscriptions(self, required, provided):
+        required = tuple(required)
         order = len(required)
         result = []
         for registry in reversed(self._registry.ro):
@@ -570,7 +586,7 @@ class AdapterLookupBase(object):
                 if extendors is None:
                     continue
 
-            _subscriptions(byorder[order], required, extendors, u'',
+            _subscriptions(byorder[order], required, extendors, _BLANK,
                            result, 0, order)
 
         self._subscribe(*required)
@@ -642,12 +658,6 @@ def _convert_None_to_Interface(x):
         return Interface
     else:
         return x
-
-def _normalize_name(name):
-    if isinstance(name, basestring):
-        return unicode(name)
-
-    raise TypeError("name must be a regular or unicode string")
 
 def _lookup(components, specs, provided, name, i, l):
     if i < l:

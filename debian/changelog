@@ -1,27 +1,98 @@
-zope.interface (3.6.1-1ubuntu3) precise; urgency=low
+zope.interface (4.1.1-3.1) unstable; urgency=medium
 
-  * Rebuild to drop python2.6 dependencies.
+  * Non-maintainer upload.
+  * Use absolute path in call to symlink_to_dir to fix upgrades from squeeze
+    to wheezy to jessie. (Closes: #768286)
 
- -- Matthias Klose <doko@ubuntu.com>  Sat, 31 Dec 2011 08:20:10 +0000
+ -- Ivo De Decker <ivodd@debian.org>  Sun, 28 Dec 2014 13:25:21 +0100
 
-zope.interface (3.6.1-1ubuntu2) oneiric; urgency=low
+zope.interface (4.1.1-3) unstable; urgency=medium
 
-  * Revert previous change on request from Matthias Klose.
+  * Added d/python{,3}-zope.interface-dbg.maintscript so that the switch
+    from symlinks to directories in /usr/share/doc is done correctly.
+    Removed d/python-zope.interface-dbg.postinst which was an incomplete
+    way of doing this. (Closes: #768286)
+  * d/control: Added Pre-Depends to -dbg packages for .maintscript to
+    work properly.
 
- -- Gediminas Paulauskas <menesis@pov.lt>  Thu, 15 Sep 2011 19:34:16 +0300
+ -- Barry Warsaw <barry@debian.org>  Mon, 17 Nov 2014 13:48:08 -0500
 
-zope.interface (3.6.1-1ubuntu1) oneiric; urgency=low
+zope.interface (4.1.1-2) unstable; urgency=medium
 
-  * debian/rules: no longer install zope/__init__.py, dh_python2 will create
-    it for us. (LP: #851038)
+  * Simplify DEP-8 tests so that they just ensure that the package is
+    importable in both Python 2 and Python 3.
 
- -- Gediminas Paulauskas <menesis@pov.lt>  Thu, 15 Sep 2011 15:21:20 +0300
+ -- Barry Warsaw <barry@debian.org>  Mon, 30 Jun 2014 14:34:48 -0400
 
-zope.interface (3.6.1-1build1) oneiric; urgency=low
+zope.interface (4.1.1-1) unstable; urgency=medium
 
-  * No change rebuild to drop Python 3.1 support.
+  * Team upload.
+  * New upstream release.  Closes: #740555
+  * d/control:
+    - Bumped Standards-Version to 3.9.5 with no other changes necessary.
+    - Updated Build-Depends.
+    - Added myself to Uploaders.
+    - Tweaked long descriptions.
+    - wrap-and-sort
+  * d/rules:
+    - Switch to --buildsystem=pybuild and simplify.
+  * d/compat: Bump to version 9.
+  * d/copyright: Added Files-Excluded header to prune pre-built Sphinx
+    artifacts in docs/_build from the original tarball.
 
- -- Barry Warsaw <barry@ubuntu.com>  Fri, 03 Jun 2011 15:29:55 -0400
+ -- Barry Warsaw <barry@debian.org>  Tue, 24 Jun 2014 17:47:24 -0400
+
+zope.interface (4.0.5-1) unstable; urgency=low
+
+  * Team upload.
+
+  [ Gediminas Paulauskas ]
+  * New upstream release. (Closes: #691509)
+  * debian/control:
+    - Add Build-Depends on dpkg-dev (>= 1.16.1~) for multiarch support
+    - Bump Standards-Version to 3.9.4
+    - Update supported Python versions
+    - remove python3-zope.fixers from Build-Depends
+    - enable autopkgtest (Closes: #692688)
+  * debian/rules:
+    - README.rst was renamed
+  * debian/tests/control: add zope.event
+  * debian/copyright: update to copyright-format 1.0
+
+  [ Matthias Klose ]
+  * Allow cross-building the package (however dh_python[23] needs to
+    get aware of cross builds).
+
+  [ Barry Warsaw ]
+  * fix_segfault_py3_64bit_LP_675064.diff: Applied upstream, removed.
+
+  [ Arnaud Fontaine ]
+  * debian/rules:
+    - CHANGES.txt was renamed to CHANGES.rst.
+
+ -- Gediminas Paulauskas <menesis@pov.lt>  Fri, 24 May 2013 22:23:43 +0300
+
+zope.interface (3.6.1-3) unstable; urgency=low
+
+  * Team upload.
+  * Remove setuptools from requires.txt for Python3 (#688838) by overriding
+    dh_gencontrol rather than dh_install, otherwise python3-pkg-resources is
+    not added as Depends.
+
+ -- Arnaud Fontaine <arnau@debian.org>  Wed, 26 Sep 2012 16:16:22 +0900
+
+zope.interface (3.6.1-2) unstable; urgency=low
+
+  * Team upload.
+  * debian/rules:
+    + Make sure that building fails if any python command fails.
+    + Remove setuptools from requires.txt for Python3 only as dh_python2
+      already take care of that. Closes: #688838.
+  * debian/python-zope.interface-dbg.postinst:
+    + Properly handle upgrade from Squeeze of /usr/share/doc to a symlink.
+      Closes: #687878.
+
+ -- Arnaud Fontaine <arnau@debian.org>  Wed, 26 Sep 2012 12:24:31 +0900
 
 zope.interface (3.6.1-1) unstable; urgency=low
 
@@ -53,18 +124,6 @@ zope.interface (3.6.1-1) unstable; urgency=low
     the final location.
 
  -- Arnaud Fontaine <arnau@debian.org>  Mon, 16 May 2011 20:34:35 +0900
-
-zope.interface (3.6.1-0ubuntu3) natty; urgency=low
-
-  * Build packages for python3.
-
- -- Matthias Klose <doko@ubuntu.com>  Wed, 23 Feb 2011 18:31:44 +0100
-
-zope.interface (3.6.1-0ubuntu2) natty; urgency=low
-
-  * Rebuild to add support for python 2.7.
-
- -- Matthias Klose <doko@ubuntu.com>  Fri, 03 Dec 2010 00:18:11 +0000
 
 zope.interface (3.6.1-0ubuntu1) maverick; urgency=low
 

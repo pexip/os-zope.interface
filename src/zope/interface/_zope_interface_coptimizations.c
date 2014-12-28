@@ -979,7 +979,13 @@ _lookup1(lookup *self,
       Py_DECREF(tup);
     }
   else
-    Py_INCREF(result);
+    {
+      if (result == Py_None && default_ != NULL)
+        {
+          result = default_;
+        }
+      Py_INCREF(result);
+    }
 
   return result;
 }
@@ -1565,8 +1571,7 @@ static struct PyMethodDef m_methods[] = {
 };
 
 #if  PY_MAJOR_VERSION >= 3
-static char module_doc[] = "C optimizations for zope.interface\n\n"
-  "$Id: _zope_interface_coptimizations.c 111871 2010-05-02 17:19:14Z tseaver $";
+static char module_doc[] = "C optimizations for zope.interface\n\n";
 
 static struct PyModuleDef _zic_module = {
 	PyModuleDef_HEAD_INIT,
@@ -1581,9 +1586,6 @@ static struct PyModuleDef _zic_module = {
 };
 #endif
 
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
 static PyObject *
 init(void)
 {
@@ -1646,8 +1648,7 @@ init(void)
   #if PY_MAJOR_VERSION < 3
   /* Create the module and add the functions */
   m = Py_InitModule3("_zope_interface_coptimizations", m_methods,
-                     "C optimizations for zope.interface\n\n"
-                     "$Id: _zope_interface_coptimizations.c 111871 2010-05-02 17:19:14Z tseaver $");
+                     "C optimizations for zope.interface\n\n");
   #else
   m = PyModule_Create(&_zic_module);
   #endif
@@ -1673,8 +1674,8 @@ init(void)
   return m;
 }
 
-#if PY_MAJOR_VERSION < 3
 PyMODINIT_FUNC
+#if PY_MAJOR_VERSION < 3
 init_zope_interface_coptimizations(void)
 {
   init();

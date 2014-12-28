@@ -1,83 +1,29 @@
 #!/usr/bin/make -f
 
-export PYDEB_SUGGESTS_EXTRAS=docs
+export PYBUILD_NAME=zope.interface
+#export DH_VERBOSE=1
 
 %:
-	dh --with python2 --with python3 $@
+	dh $@ --with python2,python3 --buildsystem=pybuild
 
 package=python-zope.interface
 package3=python3-zope.interface
 
-override_dh_auto_clean:
-	rm -rf build
-	find -name __pycache__ | xargs -r rm -rf
-	find -name '*.py[co]' | xargs -r rm -f
-
-override_dh_auto_build:
-	for pyvers in $(shell pyversions -vr); do \
-		python$$pyvers setup.py build; \
-	done
-	for pyvers in $(shell py3versions -sv); do \
-		python$$pyvers setup.py build; \
-	done
-
 override_dh_auto_install:
-	set -x; \
-	for pyvers in $(shell pyversions -vr); do \
-		python$$pyvers setup.py install --install-layout=deb \
-			--root $(CURDIR)/debian/$(package); \
-	done
-	set -x; \
-	for pyvers in $(shell py3versions -vs); do \
-		python$$pyvers setup.py install --install-layout=deb \
-			--root $(CURDIR)/debian/$(package3); \
-	done
-
-override_dh_install:
-	# remove C source
+	dh_auto_install
+	# Remove C sources.
 	find debian/$(package) -name '*.c' | xargs -r rm -f
-	# remove debug symbols
-	#rm debian/$(package)/usr/lib/python*/*-packages/zope/interface/_zope_interface_coptimizations_d.so
-	# zope.interface provides the zope namespace __init__.py
-	for py in $(shell pyversions -vr debian/control); do \
-	    cp src/zope/__init__.py debian/$(package)/usr/lib/python$$py/*-packages/zope/; \
-	done
-	# python-zope.interface-dbg package
-	for py in $(shell pyversions -vr debian/control); do \
-	    python$$py-dbg setup.py install --no-compile --single-version-externally-managed \
-	    $(py_setup_install_args) --root=debian/$(package)-dbg \
-	    --install-layout=deb; \
-	done
-	find debian/$(package)-dbg
-	find debian/$(package)-dbg ! -type d ! -name '*.so' | xargs rm -f
-	find debian/$(package)-dbg -depth -empty -exec rmdir {} \;
-
-
-	# remove C source
 	find debian/$(package3) -name '*.c' | xargs -r rm -f
-	# remove debug symbols
-	#-rm debian/$(package3)/usr/lib/python3/dist-packages/zope/interface/_zope_interface_coptimizations_d.so
-	# zope.interface provides the zope namespace __init__.py
-	for py in $(shell py3versions -vs); do \
-	    cp src/zope/__init__.py debian/$(package3)/usr/lib/python3/dist-packages/zope/; \
-	done
-	# python3-zope.interface-dbg package
-	for py in $(shell py3versions -vs); do \
-	    python$$py-dbg setup.py install --no-compile --single-version-externally-managed \
-	    $(py_setup_install_args) --root=debian/$(package3)-dbg \
-	    --install-layout=deb; \
-	done
-	find debian/$(package3)-dbg
-	find debian/$(package3)-dbg ! -type d ! -name '*.so' | xargs rm -f
-	find debian/$(package3)-dbg -depth -empty -exec rmdir {} \;
 
 override_dh_installdocs:
-	dh_installdocs -p$(package) README.txt
+	dh_installdocs
+	dh_installdocs -p$(package) README.rst
 	dh_installdocs -p$(package)-dbg --link-doc=$(package)
 
-	dh_installdocs -p$(package3) README.txt
+	dh_installdocs -p$(package3) README.rst
 	dh_installdocs -p$(package3)-dbg --link-doc=$(package3)
 
-override_dh_strip:
-	dh_strip -p$(package) --dbg-package=$(package)-dbg
-	dh_strip -p$(package3) --dbg-package=$(package3)-dbg
+override_dh_installchangelogs:
+	dh_installchangelogs
+	dh_installchangelogs -p$(package) CHANGES.rst
+	dh_installchangelogs -p$(package3) CHANGES.rst

@@ -1,7 +1,5 @@
 Tests: all
-Features: no-build-needed
-Depends: python-all, python-zope.interface, python-zope.testrunner
+Depends: @
 
 Tests: all-3
-Features: no-build-needed
-Depends: python3-all, python3-zope.interface, python3-zope.testrunner
+Depends: @

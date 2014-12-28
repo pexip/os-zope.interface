@@ -1,4 +1,13 @@
 setuptools
 
+[test]
+zope.event
+
 [docs]
-z3c.recipe.sphinxdoc
+Sphinx
+repoze.sphinx.autointerface
+
+[testing]
+zope.event
+nose
+coverage

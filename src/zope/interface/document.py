@@ -15,8 +15,6 @@
 
 This module provides a function, asStructuredText, for rendering an
 interface as structured text.
-
-$Id: document.py 110536 2010-04-06 02:59:44Z tseaver $
 """
 import zope.interface
 
@@ -43,8 +41,7 @@ def asStructuredText(I, munge=0):
             outp(_justify_and_indent(_trim_doc_string(item), level, munge))
         level -= 1
 
-    namesAndDescriptions = I.namesAndDescriptions()
-    namesAndDescriptions.sort()
+    namesAndDescriptions = sorted(I.namesAndDescriptions())
 
     outp(_justify_and_indent("Attributes:", level, munge))
     level += 1

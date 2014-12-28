@@ -17,11 +17,47 @@
 # Zope Toolkit policies as described by this documentation.
 ##############################################################################
 """Setup for zope.interface package
-
-$Id: setup.py 111891 2010-05-03 13:11:45Z regebro $
 """
 
-import os, sys
+import os
+import platform
+import sys
+
+from distutils.errors import CCompilerError
+from distutils.errors import DistutilsExecError
+from distutils.errors import DistutilsPlatformError
+
+try:
+    from setuptools.command.build_ext import build_ext
+except ImportError:
+    from distutils.command.build_ext import build_ext
+
+class optional_build_ext(build_ext):
+    """This class subclasses build_ext and allows
+       the building of C extensions to fail.
+    """
+    def run(self):
+        try:
+            build_ext.run(self)
+        except DistutilsPlatformError as e:
+            self._unavailable(e)
+
+    def build_extension(self, ext):
+        try:
+            build_ext.build_extension(self, ext)
+        except (CCompilerError, DistutilsExecError) as e:
+            self._unavailable(e)
+
+    def _unavailable(self, e):
+        print('*' * 80)
+        print("""WARNING:
+
+        An optional code optimization (C extension) could not be compiled.
+
+        Optimizations for this package will not be available!""")
+        print()
+        print(e)
+        print('*' * 80)
 
 try:
     from setuptools import setup, Extension, Feature
@@ -29,82 +65,54 @@ except ImportError:
     # do we need to support plain distutils for building when even
     # the package itself requires setuptools for installing?
     from distutils.core import setup, Extension
-
-    if sys.version_info[:2] >= (2, 4):
-        extra = dict(
-            package_data={
-                'zope.interface': ['*.txt'],
-                'zope.interface.tests': ['*.txt'],
-                }
-            )
-    else:
-        extra = {}
-
+    extra = {}
 else:
-    codeoptimization = Feature("Optional code optimizations",
-                               standard = True,
-                               ext_modules = [Extension(
-                                             "zope.interface._zope_interface_coptimizations",
-                                             [os.path.normcase(
-                                             os.path.join('src', 'zope',
-                                             'interface',
-                                             '_zope_interface_coptimizations.c')
-                                             )]
-                                             )])
+    codeoptimization_c = os.path.join('src', 'zope', 'interface',
+                                      '_zope_interface_coptimizations.c')
+    codeoptimization = Feature(
+            "Optional code optimizations",
+            standard = True,
+            ext_modules = [Extension(
+                           "zope.interface._zope_interface_coptimizations",
+                           [os.path.normcase(codeoptimization_c)]
+                          )])
+    py_impl = getattr(platform, 'python_implementation', lambda: None)
+    is_pypy = py_impl() == 'PyPy'
+    is_jython = 'java' in sys.platform
+
+    # Jython cannot build the C optimizations, while on PyPy they are
+    # anti-optimizations (the C extension compatibility layer is known-slow,
+    # and defeats JIT opportunities).
+    if is_pypy or is_jython:
+        features = {}
+    else:
+        features = {'codeoptimization': codeoptimization}
+    tests_require = ['zope.event']
+    testing_extras = tests_require + ['nose', 'coverage']
     extra = dict(
         namespace_packages=["zope"],
         include_package_data = True,
         zip_safe = False,
-        tests_require = [],
+        tests_require = tests_require,
         install_requires = ['setuptools'],
-        extras_require={'docs': ['z3c.recipe.sphinxdoc']},
-        features = {'codeoptimization': codeoptimization}
+        extras_require={'docs': ['Sphinx', 'repoze.sphinx.autointerface'],
+                        'test': tests_require,
+                        'testing': testing_extras,
+                       },
+        features = features
         )
 
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 long_description=(
-        read('README.txt')
+        read('README.rst')
         + '\n' +
-        'Detailed Documentation\n'
-        '**********************\n'
-        + '\n.. contents::\n\n' +
-        read('src', 'zope', 'interface', 'README.txt')
-        + '\n' +
-        read('src', 'zope', 'interface', 'adapter.txt')
-        + '\n' +
-        read('src', 'zope', 'interface', 'human.txt')
-        + '\n' +
-        read('CHANGES.txt')
-        + '\n' +
-        'Download\n'
-        '********\n'
+        read('CHANGES.rst')
         )
 
-try: # Zope 3 setuptools versions
-    from build_ext_3 import optional_build_ext
-    # This is Python 3. Setuptools is now required, and so is zope.fixers.
-    extra['install_requires'] = ['setuptools']
-    extra['setup_requires'] = ['zope.fixers']
-    extra['use_2to3'] = True
-    extra['convert_2to3_doctests'] = [
-        'src/zope/interface/README.ru.txt',
-        'src/zope/interface/README.txt',
-        'src/zope/interface/adapter.ru.txt',
-        'src/zope/interface/adapter.txt',
-        'src/zope/interface/human.ru.txt',
-        'src/zope/interface/human.txt',
-        'src/zope/interface/index.txt',
-        'src/zope/interface/verify.txt',
-        ]
-    extra['use_2to3_fixers'] = ['zope.fixers']
-
-except (ImportError, SyntaxError):
-    from build_ext_2 import optional_build_ext
-    
 setup(name='zope.interface',
-      version='3.6.1',
+      version='4.1.1',
       url='http://pypi.python.org/pypi/zope.interface',
       license='ZPL 2.1',
       description='Interfaces for Python',
@@ -116,10 +124,17 @@ setup(name='zope.interface',
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Zope Public License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.4",
-        "Programming Language :: Python :: 2.5",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 3.1",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Framework :: Zope3",
         "Topic :: Software Development :: Libraries :: Python Modules",
       ],
 
