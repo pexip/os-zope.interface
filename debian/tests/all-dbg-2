@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python-dbg
 
 import zope.interface
-print(zope.interface)
+print zope.interface
 
 # Make sure the optimization module is importable.
 import zope.interface._zope_interface_coptimizations
-print(zope.interface._zope_interface_coptimizations)
+print zope.interface._zope_interface_coptimizations
