@@ -12,8 +12,6 @@
 #
 ##############################################################################
 """Test for datetime interfaces
-
-$Id: test_idatetime.py 110536 2010-04-06 02:59:44Z tseaver $
 """
 
 import unittest

@@ -23,16 +23,15 @@ PEAK is a Python application framework that interoperates with (but does
 not require) Zope 3 and Twisted.  It provides tools for manipulating UML
 models, object-relational persistence, aspect-oriented programming, and more.
 Visit the PEAK home page at http://peak.telecommunity.com for more information.
-
-$Id: advice.py 110699 2010-04-09 08:16:17Z regebro $
 """
 
 from types import FunctionType
 try:
     from types import ClassType
-    __python3 = False
-except ImportError:
+except ImportError:  #pragma NO COVER Python > 3.x
     __python3 = True
+else: #pragma NO COVER Python < 3.x
+    __python3 = False
     
 import sys
 
@@ -65,7 +64,7 @@ def getFrameInfo(frame):
         kind = "class"
     elif not sameNamespace:
         kind = "function call"
-    else:
+    else:   # pragma NO COVER
         # How can you have f_locals is f_globals, and have '__module__' set?
         # This is probably module-level code, but with a '__module__' variable.
         kind = "unknown"
@@ -95,6 +94,10 @@ def addClassAdvisor(callback, depth=2):
     callbacks *after* the last '__metaclass__' assignment in the containing
     class will be executed.  Be sure that classes using "advising" functions
     declare any '__metaclass__' *first*, to ensure all callbacks are run."""
+    # This entire approach is invalid under Py3K.  Don't even try to fix
+    # the coverage for this block there. :(
+    if __python3: #pragma NO COVER
+        raise TypeError('Class advice impossible in Python3')
 
     frame = sys._getframe(depth)
     kind, module, caller_locals, caller_globals = getFrameInfo(frame)
@@ -108,7 +111,7 @@ def addClassAdvisor(callback, depth=2):
     #    )
 
     previousMetaclass = caller_locals.get('__metaclass__')
-    if __python3:
+    if __python3:   # pragma NO COVER
         defaultMetaclass  = caller_globals.get('__metaclass__', type)
     else:
         defaultMetaclass  = caller_globals.get('__metaclass__', ClassType)
@@ -169,7 +172,7 @@ def determineMetaclass(bases, explicit_mc=None):
 
     candidates = minimalBases(meta) # minimal set of metaclasses
 
-    if not candidates:
+    if not candidates: #pragma NO COVER
         # they're all "classic" classes
         assert(not __python3) # This should not happen under Python 3
         return ClassType
@@ -185,7 +188,7 @@ def determineMetaclass(bases, explicit_mc=None):
 def minimalBases(classes):
     """Reduce a list of base classes to its ordered minimum equivalent"""
 
-    if not __python3:
+    if not __python3: #pragma NO COVER
         classes = [c for c in classes if c is not ClassType]
     candidates = []
 
