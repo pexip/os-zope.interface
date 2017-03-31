@@ -4,20 +4,24 @@ Priority: optional
 Maintainer: Pexip AS <packaging@pexip.com>
 XSBC-Pexip-Original-Maintainer: Debian/Ubuntu Zope Team <pkg-zope-developers@lists.alioth.debian.org>
 XSBC-Pexip-Original-Uploaders: Brian Sutherland <brian@vanguardistas.net>,
-           Fabio Tranchitella <kobold@debian.org>
-Build-Depends: debhelper (>= 7.0.50~),
+           Fabio Tranchitella <kobold@debian.org>,
+           Barry Warsaw <barry@debian.org>
+Build-Depends: debhelper (>= 9),
+               dh-python,
                python-all-dev (>= 2.6.6-3~),
                python-all-dbg,
                python-setuptools,
+               python-zope.event,
                python3-all-dev,
-               python3-all-dbg, 
-               python3-zope.fixers,
-               python3-setuptools
-Standards-Version: 3.9.2
-X-Python-Version: >= 2.4
-X-Python3-Version: >= 3.1
+               python3-all-dbg,
+               python3-setuptools,
+               python3-zope.event,
+Standards-Version: 3.9.5
+X-Python-Version: >= 2.6
+X-Python3-Version: >= 3.2
+XS-Testsuite: autopkgtest
 Homepage: http://pypi.python.org/pypi/zope.interface
-Vcs-Svn: svn://svn.debian.org/pkg-zope/zope.interface/trunk
+Vcs-Svn: svn://anonscm.debian.org/pkg-zope/zope.interface/trunk
 Vcs-Browser: http://svn.debian.org/viewsvn/pkg-zope/zope.interface/trunk
 XS-Pexip-Upstream: http://ftp.debian.org/debian/ jessie
 
@@ -32,11 +36,14 @@ Description: Interfaces for Python
  Interfaces are a mechanism for labeling objects as conforming to a given API
  or contract. So, this package can be considered as implementation of the
  Design By Contract methodology support in Python.
+ .
+ This is the Python 3 version.
 
 Package: python-zope.interface-dbg
 Priority: extra
 Section: debug
 Architecture: any
+Pre-Depends: dpkg (>= 1.17.5)
 Depends: python-zope.interface (= ${binary:Version}),
          python-dbg,
          ${misc:Depends},
@@ -61,11 +68,14 @@ Description: Interfaces for Python3
  Interfaces are a mechanism for labeling objects as conforming to a given API
  or contract. So, this package can be considered as implementation of the
  Design By Contract methodology support in Python.
+ .
+ This is the Python 3 version.
 
 Package: python3-zope.interface-dbg
 Priority: extra
 Section: debug
 Architecture: any
+Pre-Depends: dpkg (>= 1.17.5)
 Depends: python3-zope.interface (= ${binary:Version}),
          python3-dbg,
          ${misc:Depends},

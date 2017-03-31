@@ -1,11 +1,12 @@
-Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=174
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: zope.interface
 Upstream-Contact: Zope Foundation and Contributors <zope-dev@zope.org>
 Source: http://pypi.python.org/pypi/zope.interface
+Files-Excluded: docs/_build/*
 
 Files: *
 Copyright: (c) 2001-2010 Zope Foundation and Contributors.
-License: ZPL-2.1
+License: Zope-2.1
  Zope Public License (ZPL) Version 2.1
  .
  A copyright notice accompanies this license document that identifies the

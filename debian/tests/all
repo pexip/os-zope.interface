@@ -1,3 +1,4 @@
-#!/bin/bash
-testfilter="-s zope.interface"
-. /usr/share/python-zope.testrunner/test_helper
+#!/usr/bin/python
+
+import zope.interface
+print zope.interface

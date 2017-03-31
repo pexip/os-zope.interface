@@ -12,8 +12,6 @@
 #
 ##############################################################################
 """Sequence Interfaces
-
-$Id: sequence.py 110536 2010-04-06 02:59:44Z tseaver $
 """
 __docformat__ = 'restructuredtext'
 from zope import interface

@@ -12,8 +12,6 @@
 #
 ##############################################################################
 """Base Mapping tests
-
-$Id: basemapping.py 110736 2010-04-11 10:59:30Z regebro $
 """
 from operator import __getitem__
 
