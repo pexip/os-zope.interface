@@ -3,20 +3,26 @@ Hacking on :mod:`zope.interface`
 
 
 Getting the Code
------------------
+################
 
-The main repository for :mod:`zope.interface` is in the Zope Subversion
-repository:
+The main repository for :mod:`zope.interface` is in the Zope Foundation
+Github repository:
 
-http://svn.zope.org/zope.interface
+  https://github.com/zopefoundation/zope.interface
 
-You can get a read-only Subversion checkout from there:
+You can get a read-only checkout from there:
 
 .. code-block:: sh
 
-   $ svn checkout svn://svn.zope.org/repos/main/zope.interface/trunk zope.interface
+   $ git clone https://github.com/zopefoundation/zope.interface.git
 
-The project also mirrors the trunk from the Subversion repository as a
+or fork it and get a writeable checkout of your fork:
+
+.. code-block:: sh
+
+   $ git clone git@github.com/jrandom/zope.interface.git
+
+The project also mirrors the trunk from the Github repository as a
 Bazaar branch on Launchpad:
 
 https://code.launchpad.net/zope.interface
@@ -28,8 +34,11 @@ You can branch the trunk from there using Bazaar:
    $ bzr branch lp:zope.interface
 
 
-Running the tests in a ``virtualenv``
--------------------------------------
+Working in a ``virtualenv``
+###########################
+
+Running the tests
+-----------------
 
 If you use the ``virtualenv`` package to create lightweight Python
 development environments, you can run the tests using nothing more
@@ -107,8 +116,8 @@ you can see how well the tests cover the code:
    OK
 
 
-Building the documentation in a ``virtualenv``
-----------------------------------------------
+Building the documentation
+--------------------------
 
 :mod:`zope.interface` uses the nifty :mod:`Sphinx` documentation system
 for building its docs.  Using the same virtualenv you set up to run the
@@ -152,22 +161,29 @@ You can also test the code snippets in the documentation:
        results in docs/_build/doctest/output.txt.
 
 
-Running the tests using  :mod:`zc.buildout`
--------------------------------------------
+
+Using :mod:`zc.buildout`
+########################
+
+Setting up the buildout
+-----------------------
 
 :mod:`zope.interface` ships with its own :file:`buildout.cfg` file and
 :file:`bootstrap.py` for setting up a development buildout:
 
 .. code-block:: sh
 
-   $ /path/to/python2.6 bootstrap.py
+   $ /path/to/python2.7 bootstrap.py
    ...
    Generated script '.../bin/buildout'
    $ bin/buildout
-   Develop: '/home/tseaver/projects/Zope/BTK/interface/.'
+   Develop: '/home/jrandom/projects/Zope/BTK/interface/.'
    ...
    Generated script '.../bin/sphinx-quickstart'.
    Generated script '.../bin/sphinx-build'.
+
+Running the tests
+-----------------
 
 You can now run the tests:
 
@@ -181,45 +197,11 @@ You can now run the tests:
      Tear down zope.testing.testrunner.layer.UnitTests in 0.000 seconds.
 
 
-Building the documentation using :mod:`zc.buildout`
----------------------------------------------------
+Using :mod:`tox`
+################
 
-The :mod:`zope.interface` buildout installs the Sphinx scripts required to
-build the documentation, including testing its code snippets:
-
-.. todo:: verify this!
-
-.. code-block:: sh
-
-   $ cd docs
-   $ PATH=../bin:$PATH make doctest html
-   .../bin/sphinx-build -b doctest -d .../docs/_build/doctrees   .../docs .../docs/_build/doctest
-   running tests...
-
-   Document: index
-   ---------------
-   1 items passed all tests:
-     17 tests in default
-   17 tests in 1 items.
-   17 passed and 0 failed.
-   Test passed.
-
-   Doctest summary
-   ===============
-      17 tests
-       0 failures in tests
-       0 failures in setup code
-   build succeeded.
-   Testing of doctests in the sources finished, look at the  results in .../docs/_build/doctest/output.txt.
-   .../bin/sphinx-build -b html -d .../docs/_build/doctrees   .../docs .../docs/_build/html
-   ...
-   build succeeded.
-
-   Build finished. The HTML pages are in .../docs/_build/html.
-
-
-Running Tests on Multiple Python Versions via :mod:`tox`
---------------------------------------------------------
+Running Tests on Multiple Python Versions
+-----------------------------------------
 
 `tox <http://tox.testrun.org/latest/>`_ is a Python-based test automation
 tool designed to run tests against multiple Python versions.  It creates
@@ -230,32 +212,21 @@ configured commands.
 :mod:`zope.interface` configures the following :mod:`tox` environments via
 its ``tox.ini`` file:
 
-- The ``py26`` environment builds a ``virtualenv`` with ``python2.6``,
+- The ``py26``, ``py27``, ``py33``, ``py34``, and ``pypy`` environments
+  builds a ``virtualenv`` with ``pypy``,
   installs :mod:`zope.interface` and dependencies, and runs the tests
   via ``python setup.py test -q``.
 
-- The ``py27`` environment builds a ``virtualenv`` with ``python2.7``,
-  installs :mod:`zope.interface` and dependencies, and runs the tests
-  via ``python setup.py test -q``.
-
-- The ``py32`` environment builds a ``virtualenv`` with ``python3.2``,
-  installs :mod:`zope.interface` and dependencies, and runs the tests
-  via ``python setup.py test -q``.
-
-- The ``pypy`` environment builds a ``virtualenv`` with ``pypy``,
-  installs :mod:`zope.interface` and dependencies, and runs the tests
-  via ``python setup.py test -q``.
-
-- The ``coverage`` environment builds a ``virtualenv`` with ``python2.6``,
+- The ``coverage`` environment builds a ``virtualenv`` with ``python2.7``,
   installs :mod:`zope.interface` and dependencies, installs
   :mod:`nose` and :mod:`coverage`, and runs ``nosetests`` with statement
   coverage.
 
-- The ``docs`` environment builds a virtualenv with ``python2.6``, installs
+- The ``docs`` environment builds a virtualenv with ``python2.7``, installs
   :mod:`zope.interface` and dependencies, installs ``Sphinx`` and
   dependencies, and then builds the docs and exercises the doctest snippets.
 
-This example requires that you have a working ``python2.6`` on your path,
+This example requires that you have a working ``python2.7`` on your path,
 as well as installing ``tox``:
 
 .. code-block:: sh
@@ -300,12 +271,15 @@ including building the docs and testing their snippets:
    congratulations :)
 
 
+Contributing to :mod:`zope.interface`
+#####################################
+
 Submitting a Bug Report
 -----------------------
 
-:mod:`zope.interface` tracks its bugs on Launchpad:
+:mod:`zope.interface` tracks its bugs on Github:
 
-https://bugs.launchpad.net/zope.interface
+  https://github.com/zopefoundation/zope.interface/issues
 
 Please submit bug reports and feature requests there.
 
@@ -320,23 +294,19 @@ Sharing Your Changes
    or bug fixes, although it is possible that you may have tested your
    new code by updating existing tests.
 
-If you got a read-only checkout from the Subversion repository, and you
-have made a change you would like to share, the best route is to let
-Subversion help you make a patch file:
+If have made a change you would like to share, the best route is to fork
+the Githb repository, check out your fork, make your changes on a branch
+in your fork, and push it.  You can then submit a pull request from your
+branch:
 
-.. code-block:: sh
-
-   $ svn diff > zope.interface-cool_feature.patch
-
-You can then upload that patch file as an attachment to a Launchpad bug
-report.
+  https://github.com/zopefoundation/zope.interface/pulls
 
 If you branched the code from Launchpad using Bazaar, you have another
 option:  you can "push" your branch to Launchpad:
 
 .. code-block:: sh
 
-   $ bzr push lp:~tseaver/zope.interface/cool_feature
+   $ bzr push lp:~jrandom/zope.interface/cool_feature
 
 After pushing your branch, you can link it to a bug report on Launchpad,
 or request that the maintainers merge your branch using the Launchpad

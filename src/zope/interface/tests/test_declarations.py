@@ -15,19 +15,7 @@
 """
 import unittest
 
-from zope.interface._compat import _skip_under_py3k, _u
-
-
-class _SilencePy3Deprecations(unittest.TestCase):
-    # silence deprecation warnings under py3
-
-    def failUnless(self, expr):
-        # St00pid speling.
-        return self.assertTrue(expr)
-
-    def failIf(self, expr):
-        # St00pid speling.
-        return self.assertFalse(expr)
+from zope.interface._compat import _skip_under_py3k
 
 
 class _Py3ClassAdvice(object):
@@ -58,20 +46,20 @@ class NamedTests(unittest.TestCase):
     def test_class(self):
         from zope.interface.declarations import named
 
-        @named(_u('foo'))
+        @named(u'foo')
         class Foo(object):
             pass
 
-        self.assertEqual(Foo.__component_name__, _u('foo'))
+        self.assertEqual(Foo.__component_name__, u'foo')
 
     def test_function(self):
         from zope.interface.declarations import named
 
-        @named(_u('foo'))
+        @named(u'foo')
         def doFoo(object):
             pass
 
-        self.assertEqual(doFoo.__component_name__, _u('foo'))
+        self.assertEqual(doFoo.__component_name__, u'foo')
 
     def test_instance(self):
         from zope.interface.declarations import named
@@ -79,12 +67,12 @@ class NamedTests(unittest.TestCase):
         class Foo(object):
             pass
         foo = Foo()
-        named(_u('foo'))(foo)
+        named(u'foo')(foo)
 
-        self.assertEqual(foo.__component_name__, _u('foo'))
+        self.assertEqual(foo.__component_name__, u'foo')
 
 
-class DeclarationTests(_SilencePy3Deprecations):
+class DeclarationTests(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import Declaration
@@ -112,31 +100,31 @@ class DeclarationTests(_SilencePy3Deprecations):
     def test_changed_wo_existing__v_attrs(self):
         decl = self._makeOne()
         decl.changed(decl) # doesn't raise
-        self.failIf('_v_attrs' in decl.__dict__)
+        self.assertFalse('_v_attrs' in decl.__dict__)
 
     def test_changed_w_existing__v_attrs(self):
         decl = self._makeOne()
         decl._v_attrs = object()
         decl.changed(decl)
-        self.failIf('_v_attrs' in decl.__dict__)
+        self.assertFalse('_v_attrs' in decl.__dict__)
 
     def test___contains__w_self(self):
         from zope.interface.interface import InterfaceClass
         IFoo = InterfaceClass('IFoo')
         decl = self._makeOne()
-        self.failIf(decl in decl)
+        self.assertFalse(decl in decl)
 
     def test___contains__w_unrelated_iface(self):
         from zope.interface.interface import InterfaceClass
         IFoo = InterfaceClass('IFoo')
         decl = self._makeOne()
-        self.failIf(IFoo in decl)
+        self.assertFalse(IFoo in decl)
 
     def test___contains__w_base_interface(self):
         from zope.interface.interface import InterfaceClass
         IFoo = InterfaceClass('IFoo')
         decl = self._makeOne(IFoo)
-        self.failUnless(IFoo in decl)
+        self.assertTrue(IFoo in decl)
 
     def test___iter___empty(self):
         decl = self._makeOne()
@@ -212,7 +200,7 @@ class DeclarationTests(_SilencePy3Deprecations):
         IBar = InterfaceClass('IBar')
         before = self._makeOne(IFoo)
         after = before - IBar
-        self.failUnless(isinstance(after, self._getTargetClass()))
+        self.assertTrue(isinstance(after, self._getTargetClass()))
         self.assertEqual(list(after), [IFoo])
 
     def test___sub___related_interface(self):
@@ -236,7 +224,7 @@ class DeclarationTests(_SilencePy3Deprecations):
         IBar = InterfaceClass('IBar')
         before = self._makeOne(IFoo)
         after = before + IBar
-        self.failUnless(isinstance(after, self._getTargetClass()))
+        self.assertTrue(isinstance(after, self._getTargetClass()))
         self.assertEqual(list(after), [IFoo, IBar])
 
     def test___add___related_interface(self):
@@ -250,7 +238,7 @@ class DeclarationTests(_SilencePy3Deprecations):
         self.assertEqual(list(after), [IFoo, IBar, IBaz])
 
 
-class ImplementsTests(_SilencePy3Deprecations):
+class TestImplements(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import Implements
@@ -276,8 +264,67 @@ class ImplementsTests(_SilencePy3Deprecations):
         impl = self._makeOne()
         self.assertEqual(impl.__reduce__(), (implementedBy, (None,)))
 
+    def test_sort(self):
+        from zope.interface.declarations import implementedBy
+        class A(object):
+            pass
+        class B(object):
+            pass
+        from zope.interface.interface import InterfaceClass
+        IFoo = InterfaceClass('IFoo')
 
-class Test_implementedByFallback(_SilencePy3Deprecations):
+        self.assertEqual(implementedBy(A), implementedBy(A))
+        self.assertEqual(hash(implementedBy(A)), hash(implementedBy(A)))
+        self.assertTrue(implementedBy(A) < None)
+        self.assertTrue(None > implementedBy(A))
+        self.assertTrue(implementedBy(A) < implementedBy(B))
+        self.assertTrue(implementedBy(A) > IFoo)
+        self.assertTrue(implementedBy(A) <= implementedBy(B))
+        self.assertTrue(implementedBy(A) >= IFoo)
+        self.assertTrue(implementedBy(A) != IFoo)
+
+    def test_proxy_equality(self):
+        # https://github.com/zopefoundation/zope.interface/issues/55
+        class Proxy(object):
+            def __init__(self, wrapped):
+                self._wrapped = wrapped
+
+            def __getattr__(self, name):
+                return getattr(self._wrapped, name)
+
+            def __eq__(self, other):
+                return self._wrapped == other
+
+            def __ne__(self, other):
+                return self._wrapped != other
+
+        from zope.interface.declarations import implementedBy
+        class A(object):
+            pass
+
+        class B(object):
+            pass
+
+        implementedByA = implementedBy(A)
+        implementedByB = implementedBy(B)
+        proxy = Proxy(implementedByA)
+
+        # The order of arguments to the operators matters,
+        # test both
+        self.assertTrue(implementedByA == implementedByA)
+        self.assertTrue(implementedByA != implementedByB)
+        self.assertTrue(implementedByB != implementedByA)
+
+        self.assertTrue(proxy == implementedByA)
+        self.assertTrue(implementedByA == proxy)
+        self.assertFalse(proxy != implementedByA)
+        self.assertFalse(implementedByA != proxy)
+
+        self.assertTrue(proxy != implementedByB)
+        self.assertTrue(implementedByB != proxy)
+
+
+class Test_implementedByFallback(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import implementedByFallback
@@ -309,7 +356,7 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
         with _MonkeyDict(declarations,
                          'BuiltinImplementationSpecifications') as specs:
             specs[foo] = reg
-            self.failUnless(self._callFUT(foo) is reg)
+            self.assertTrue(self._callFUT(foo) is reg)
 
     def test_dictless_w_existing_Implements(self):
         from zope.interface.declarations import Implements
@@ -318,7 +365,7 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
             __slots__ = ('__implemented__',)
         foo = Foo()
         foo.__implemented__ = impl
-        self.failUnless(self._callFUT(foo) is impl)
+        self.assertTrue(self._callFUT(foo) is impl)
 
     def test_dictless_w_existing_not_Implements(self):
         from zope.interface.interface import InterfaceClass
@@ -334,7 +381,7 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
         impl = Implements()
         class Foo(object):
             __implemented__ = impl
-        self.failUnless(self._callFUT(Foo) is impl)
+        self.assertTrue(self._callFUT(Foo) is impl)
 
     def test_builtins_added_to_cache(self):
         from zope.interface import declarations
@@ -347,7 +394,7 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
             self.assertEqual(list(self._callFUT(dict)), [])
             for typ in (tuple, list, dict):
                 spec = specs[typ]
-                self.failUnless(isinstance(spec, Implements))
+                self.assertTrue(isinstance(spec, Implements))
                 self.assertEqual(repr(spec),
                                 '<implementedBy %s.%s>'
                                     % (_BUILTINS, typ.__name__))
@@ -360,9 +407,9 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
             specs[tuple] = t_spec
             specs[list] = l_spec
             specs[dict] = d_spec
-            self.failUnless(self._callFUT(tuple) is t_spec)
-            self.failUnless(self._callFUT(list) is l_spec)
-            self.failUnless(self._callFUT(dict) is d_spec)
+            self.assertTrue(self._callFUT(tuple) is t_spec)
+            self.assertTrue(self._callFUT(list) is l_spec)
+            self.assertTrue(self._callFUT(dict) is d_spec)
 
     def test_oldstyle_class_no_assertions(self):
         # TODO: Figure out P3 story
@@ -393,10 +440,10 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
         spec = self._callFUT(foo)
         self.assertEqual(spec.__name__,
                          'zope.interface.tests.test_declarations.foo')
-        self.failUnless(spec.inherit is foo)
-        self.failUnless(foo.__implemented__ is spec)
-        self.failUnless(foo.__providedBy__ is objectSpecificationDescriptor)
-        self.failIf('__provides__' in foo.__dict__)
+        self.assertTrue(spec.inherit is foo)
+        self.assertTrue(foo.__implemented__ is spec)
+        self.assertTrue(foo.__providedBy__ is objectSpecificationDescriptor)
+        self.assertFalse('__provides__' in foo.__dict__)
 
     def test_w_None_no_bases_w_class(self):
         from zope.interface.declarations import ClassProvides
@@ -405,10 +452,10 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
         spec = self._callFUT(Foo)
         self.assertEqual(spec.__name__,
                          'zope.interface.tests.test_declarations.Foo')
-        self.failUnless(spec.inherit is Foo)
-        self.failUnless(Foo.__implemented__ is spec)
-        self.failUnless(isinstance(Foo.__providedBy__, ClassProvides))
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(spec.inherit is Foo)
+        self.assertTrue(Foo.__implemented__ is spec)
+        self.assertTrue(isinstance(Foo.__providedBy__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(Foo.__provides__, Foo.__providedBy__)
 
     def test_w_existing_Implements(self):
@@ -416,7 +463,7 @@ class Test_implementedByFallback(_SilencePy3Deprecations):
         impl = Implements()
         class Foo(object):
             __implemented__ = impl
-        self.failUnless(self._callFUT(Foo) is impl)
+        self.assertTrue(self._callFUT(Foo) is impl)
 
 
 class Test_implementedBy(Test_implementedByFallback):
@@ -427,7 +474,7 @@ class Test_implementedBy(Test_implementedByFallback):
         return implementedBy(*args, **kw)
 
 
-class Test_classImplementsOnly(_SilencePy3Deprecations):
+class Test_classImplementsOnly(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import classImplementsOnly
@@ -443,10 +490,10 @@ class Test_classImplementsOnly(_SilencePy3Deprecations):
         spec = Foo.__implemented__
         self.assertEqual(spec.__name__,
                          'zope.interface.tests.test_declarations.Foo')
-        self.failUnless(spec.inherit is None)
-        self.failUnless(Foo.__implemented__ is spec)
-        self.failUnless(isinstance(Foo.__providedBy__, ClassProvides))
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(spec.inherit is None)
+        self.assertTrue(Foo.__implemented__ is spec)
+        self.assertTrue(isinstance(Foo.__providedBy__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(Foo.__provides__, Foo.__providedBy__)
 
     def test_w_existing_Implements(self):
@@ -461,12 +508,12 @@ class Test_classImplementsOnly(_SilencePy3Deprecations):
         impl.inherit = Foo
         self._callFUT(Foo, IBar)
         # Same spec, now different values
-        self.failUnless(Foo.__implemented__ is impl)
+        self.assertTrue(Foo.__implemented__ is impl)
         self.assertEqual(impl.inherit, None)
         self.assertEqual(impl.declared, (IBar,))
 
 
-class Test_classImplements(_SilencePy3Deprecations):
+class Test_classImplements(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import classImplements
@@ -482,10 +529,10 @@ class Test_classImplements(_SilencePy3Deprecations):
         spec = Foo.__implemented__
         self.assertEqual(spec.__name__,
                          'zope.interface.tests.test_declarations.Foo')
-        self.failUnless(spec.inherit is Foo)
-        self.failUnless(Foo.__implemented__ is spec)
-        self.failUnless(isinstance(Foo.__providedBy__, ClassProvides))
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(spec.inherit is Foo)
+        self.assertTrue(Foo.__implemented__ is spec)
+        self.assertTrue(isinstance(Foo.__providedBy__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(Foo.__provides__, Foo.__providedBy__)
 
     def test_w_existing_Implements(self):
@@ -500,7 +547,7 @@ class Test_classImplements(_SilencePy3Deprecations):
         impl.inherit = Foo
         self._callFUT(Foo, IBar)
         # Same spec, now different values
-        self.failUnless(Foo.__implemented__ is impl)
+        self.assertTrue(Foo.__implemented__ is impl)
         self.assertEqual(impl.inherit, Foo)
         self.assertEqual(impl.declared, (IFoo, IBar,))
 
@@ -509,24 +556,26 @@ class Test_classImplements(_SilencePy3Deprecations):
         from zope.interface.interface import InterfaceClass
         IFoo = InterfaceClass('IFoo')
         IBar = InterfaceClass('IBar')
-        IBaz = InterfaceClass('IBar')
+        IBaz = InterfaceClass('IBaz', IFoo)
         b_impl = Implements(IBaz)
         impl = Implements(IFoo)
         impl.declared = (IFoo,)
-        class Base(object):
+        class Base1(object):
             __implemented__ = b_impl
-        class Foo(Base):
+        class Base2(object):
+            __implemented__ = b_impl
+        class Foo(Base1, Base2):
             __implemented__ = impl
         impl.inherit = Foo
         self._callFUT(Foo, IBar)
         # Same spec, now different values
-        self.failUnless(Foo.__implemented__ is impl)
+        self.assertTrue(Foo.__implemented__ is impl)
         self.assertEqual(impl.inherit, Foo)
         self.assertEqual(impl.declared, (IFoo, IBar,))
         self.assertEqual(impl.__bases__, (IFoo, IBar, b_impl))
 
 
-class Test__implements_advice(_SilencePy3Deprecations):
+class Test__implements_advice(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import _implements_advice
@@ -540,12 +589,12 @@ class Test__implements_advice(_SilencePy3Deprecations):
         class Foo(object):
             __implements_advice_data__ = ((IFoo,), classImplements)
         self._callFUT(Foo)
-        self.failIf('__implements_advice_data__' in Foo.__dict__)
-        self.failUnless(isinstance(Foo.__implemented__, Implements))
+        self.assertFalse('__implements_advice_data__' in Foo.__dict__)
+        self.assertTrue(isinstance(Foo.__implemented__, Implements))
         self.assertEqual(list(Foo.__implemented__), [IFoo])
 
 
-class Test_implementer(_SilencePy3Deprecations):
+class Test_implementer(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import implementer
@@ -563,14 +612,14 @@ class Test_implementer(_SilencePy3Deprecations):
             pass
         decorator = self._makeOne(IFoo)
         returned = decorator(Foo)
-        self.failUnless(returned is Foo)
+        self.assertTrue(returned is Foo)
         spec = Foo.__implemented__
         self.assertEqual(spec.__name__,
                          'zope.interface.tests.test_declarations.Foo')
-        self.failUnless(spec.inherit is Foo)
-        self.failUnless(Foo.__implemented__ is spec)
-        self.failUnless(isinstance(Foo.__providedBy__, ClassProvides))
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(spec.inherit is Foo)
+        self.assertTrue(Foo.__implemented__ is spec)
+        self.assertTrue(isinstance(Foo.__providedBy__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(Foo.__provides__, Foo.__providedBy__)
 
     def test_newstyle_class(self):
@@ -581,14 +630,14 @@ class Test_implementer(_SilencePy3Deprecations):
             pass
         decorator = self._makeOne(IFoo)
         returned = decorator(Foo)
-        self.failUnless(returned is Foo)
+        self.assertTrue(returned is Foo)
         spec = Foo.__implemented__
         self.assertEqual(spec.__name__,
                          'zope.interface.tests.test_declarations.Foo')
-        self.failUnless(spec.inherit is Foo)
-        self.failUnless(Foo.__implemented__ is spec)
-        self.failUnless(isinstance(Foo.__providedBy__, ClassProvides))
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(spec.inherit is Foo)
+        self.assertTrue(Foo.__implemented__ is spec)
+        self.assertTrue(isinstance(Foo.__providedBy__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(Foo.__provides__, Foo.__providedBy__)
 
     def test_nonclass_cannot_assign_attr(self):
@@ -605,14 +654,14 @@ class Test_implementer(_SilencePy3Deprecations):
         foo = Foo()
         decorator = self._makeOne(IFoo)
         returned = decorator(foo)
-        self.failUnless(returned is foo)
+        self.assertTrue(returned is foo)
         spec = foo.__implemented__
-        self.assertEqual(spec.__name__, '?')
-        self.failUnless(spec.inherit is None)
-        self.failUnless(foo.__implemented__ is spec)
+        self.assertEqual(spec.__name__, 'zope.interface.tests.test_declarations.?')
+        self.assertTrue(spec.inherit is None)
+        self.assertTrue(foo.__implemented__ is spec)
 
 
-class Test_implementer_only(_SilencePy3Deprecations):
+class Test_implementer_only(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import implementer_only
@@ -647,11 +696,11 @@ class Test_implementer_only(_SilencePy3Deprecations):
             __implemented__ = old_spec
         decorator = self._makeOne(IFoo)
         returned = decorator(Foo)
-        self.failUnless(returned is Foo)
+        self.assertTrue(returned is Foo)
         spec = Foo.__implemented__
         self.assertEqual(spec.__name__, '?')
-        self.failUnless(spec.inherit is None)
-        self.failUnless(Foo.__implemented__ is spec)
+        self.assertTrue(spec.inherit is None)
+        self.assertTrue(Foo.__implemented__ is spec)
 
     def test_newstyle_class(self):
         from zope.interface.declarations import Implements
@@ -663,16 +712,16 @@ class Test_implementer_only(_SilencePy3Deprecations):
             __implemented__ = old_spec
         decorator = self._makeOne(IFoo)
         returned = decorator(Foo)
-        self.failUnless(returned is Foo)
+        self.assertTrue(returned is Foo)
         spec = Foo.__implemented__
         self.assertEqual(spec.__name__, '?')
-        self.failUnless(spec.inherit is None)
-        self.failUnless(Foo.__implemented__ is spec)
+        self.assertTrue(spec.inherit is None)
+        self.assertTrue(Foo.__implemented__ is spec)
 
 
 # Test '_implements' by way of 'implements{,Only}', its only callers.
 
-class Test_implementsOnly(_SilencePy3Deprecations, _Py3ClassAdvice):
+class Test_implementsOnly(unittest.TestCase, _Py3ClassAdvice):
 
     def _getFUT(self):
         from zope.interface.declarations import implementsOnly
@@ -731,7 +780,7 @@ class Test_implementsOnly(_SilencePy3Deprecations, _Py3ClassAdvice):
             self.assertEqual(list(spec), [IBar])
 
 
-class Test_implements(_SilencePy3Deprecations, _Py3ClassAdvice):
+class Test_implements(unittest.TestCase, _Py3ClassAdvice):
 
     def _getFUT(self):
         from zope.interface.declarations import implements
@@ -795,7 +844,7 @@ class Test_implements(_SilencePy3Deprecations, _Py3ClassAdvice):
             self.assertEqual(list(spec), [IFoo])
 
 
-class ProvidesClassTests(_SilencePy3Deprecations):
+class ProvidesClassTests(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import ProvidesClass
@@ -820,7 +869,7 @@ class ProvidesClassTests(_SilencePy3Deprecations):
             pass
         spec = self._makeOne(Foo, IFoo)
         klass, args = spec.__reduce__()
-        self.failUnless(klass is Provides)
+        self.assertTrue(klass is Provides)
         self.assertEqual(args, (Foo, IFoo))
 
     def test___get___class(self):
@@ -830,7 +879,7 @@ class ProvidesClassTests(_SilencePy3Deprecations):
             pass
         spec = self._makeOne(Foo, IFoo)
         Foo.__provides__ = spec
-        self.failUnless(Foo.__provides__ is spec)
+        self.assertTrue(Foo.__provides__ is spec)
 
     def test___get___instance(self):
         from zope.interface.interface import InterfaceClass
@@ -845,7 +894,7 @@ class ProvidesClassTests(_SilencePy3Deprecations):
         self.assertRaises(AttributeError, _test)
 
 
-class Test_Provides(_SilencePy3Deprecations):
+class Test_Provides(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import Provides
@@ -861,7 +910,7 @@ class Test_Provides(_SilencePy3Deprecations):
         with _Monkey(declarations, InstanceDeclarations=cache):
             spec = self._callFUT(Foo, IFoo)
         self.assertEqual(list(spec), [IFoo])
-        self.failUnless(cache[(Foo, IFoo)] is spec)
+        self.assertTrue(cache[(Foo, IFoo)] is spec)
 
     def test_w_cached_spec(self):
         from zope.interface import declarations
@@ -873,10 +922,10 @@ class Test_Provides(_SilencePy3Deprecations):
         cache = {(Foo, IFoo): prior}
         with _Monkey(declarations, InstanceDeclarations=cache):
             spec = self._callFUT(Foo, IFoo)
-        self.failUnless(spec is prior)
+        self.assertTrue(spec is prior)
 
 
-class Test_directlyProvides(_SilencePy3Deprecations):
+class Test_directlyProvides(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import directlyProvides
@@ -890,7 +939,7 @@ class Test_directlyProvides(_SilencePy3Deprecations):
             pass
         obj = Foo()
         self._callFUT(obj, IFoo)
-        self.failUnless(isinstance(obj.__provides__, ProvidesClass))
+        self.assertTrue(isinstance(obj.__provides__, ProvidesClass))
         self.assertEqual(list(obj.__provides__), [IFoo])
 
     def test_w_class(self):
@@ -900,7 +949,7 @@ class Test_directlyProvides(_SilencePy3Deprecations):
         class Foo(object):
             pass
         self._callFUT(Foo, IFoo)
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(list(Foo.__provides__), [IFoo])
 
     @_skip_under_py3k
@@ -937,11 +986,11 @@ class Test_directlyProvides(_SilencePy3Deprecations):
                 the_dict[name] = value
         obj = Foo()
         self._callFUT(obj, IFoo)
-        self.failUnless(isinstance(the_dict['__provides__'], ProvidesClass))
+        self.assertTrue(isinstance(the_dict['__provides__'], ProvidesClass))
         self.assertEqual(list(the_dict['__provides__']), [IFoo])
 
 
-class Test_alsoProvides(_SilencePy3Deprecations):
+class Test_alsoProvides(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import alsoProvides
@@ -955,7 +1004,7 @@ class Test_alsoProvides(_SilencePy3Deprecations):
             pass
         obj = Foo()
         self._callFUT(obj, IFoo)
-        self.failUnless(isinstance(obj.__provides__, ProvidesClass))
+        self.assertTrue(isinstance(obj.__provides__, ProvidesClass))
         self.assertEqual(list(obj.__provides__), [IFoo])
 
     def test_w_existing_provides(self):
@@ -969,11 +1018,11 @@ class Test_alsoProvides(_SilencePy3Deprecations):
         obj = Foo()
         directlyProvides(obj, IFoo)
         self._callFUT(obj, IBar)
-        self.failUnless(isinstance(obj.__provides__, ProvidesClass))
+        self.assertTrue(isinstance(obj.__provides__, ProvidesClass))
         self.assertEqual(list(obj.__provides__), [IFoo, IBar])
 
 
-class Test_noLongerProvides(_SilencePy3Deprecations):
+class Test_noLongerProvides(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import noLongerProvides
@@ -1022,7 +1071,7 @@ class Test_noLongerProvides(_SilencePy3Deprecations):
         self.assertRaises(ValueError, self._callFUT, obj, IFoo)
 
 
-class ClassProvidesBaseFallbackTests(_SilencePy3Deprecations):
+class ClassProvidesBaseFallbackTests(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import ClassProvidesBaseFallback
@@ -1043,7 +1092,7 @@ class ClassProvidesBaseFallbackTests(_SilencePy3Deprecations):
         class Foo(object):
             pass
         cpbp = Foo.__provides__ = self._makeOne(Foo, IFoo)
-        self.failUnless(Foo.__provides__ is cpbp)
+        self.assertTrue(Foo.__provides__ is cpbp)
 
     def test_w_same_class_via_instance(self):
         from zope.interface.interface import InterfaceClass
@@ -1052,7 +1101,7 @@ class ClassProvidesBaseFallbackTests(_SilencePy3Deprecations):
             pass
         foo = Foo()
         cpbp = Foo.__provides__ = self._makeOne(Foo, IFoo)
-        self.failUnless(foo.__provides__ is IFoo)
+        self.assertTrue(foo.__provides__ is IFoo)
 
     def test_w_different_class(self):
         from zope.interface.interface import InterfaceClass
@@ -1075,7 +1124,7 @@ class ClassProvidesBaseTests(ClassProvidesBaseFallbackTests):
         return ClassProvidesBase
 
 
-class ClassProvidesTests(_SilencePy3Deprecations):
+class ClassProvidesTests(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import ClassProvides
@@ -1093,7 +1142,7 @@ class ClassProvidesTests(_SilencePy3Deprecations):
         class Foo(object):
             pass
         cp = Foo.__provides__ = self._makeOne(Foo, type(Foo), IBar)
-        self.failUnless(Foo.__provides__ is cp)
+        self.assertTrue(Foo.__provides__ is cp)
         self.assertEqual(list(Foo().__provides__), [IFoo])
 
     def test___reduce__(self):
@@ -1109,7 +1158,7 @@ class ClassProvidesTests(_SilencePy3Deprecations):
                          (self._getTargetClass(), (Foo, type(Foo), IBar)))
 
 
-class Test_directlyProvidedBy(_SilencePy3Deprecations):
+class Test_directlyProvidedBy(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import directlyProvidedBy
@@ -1155,7 +1204,7 @@ class Test_directlyProvidedBy(_SilencePy3Deprecations):
         self.assertEqual(list(self._callFUT(foo)), [IBar])
 
 
-class Test_classProvides(_SilencePy3Deprecations, _Py3ClassAdvice):
+class Test_classProvides(unittest.TestCase, _Py3ClassAdvice):
 
     def _getFUT(self):
         from zope.interface.declarations import classProvides
@@ -1223,7 +1272,7 @@ class Test_classProvides(_SilencePy3Deprecations, _Py3ClassAdvice):
 # Test _classProvides_advice through classProvides, its only caller.
 
 
-class Test_provider(_SilencePy3Deprecations):
+class Test_provider(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations import provider
@@ -1239,11 +1288,11 @@ class Test_provider(_SilencePy3Deprecations):
         @self._makeOne(IFoo)
         class Foo(object):
             pass
-        self.failUnless(isinstance(Foo.__provides__, ClassProvides))
+        self.assertTrue(isinstance(Foo.__provides__, ClassProvides))
         self.assertEqual(list(Foo.__provides__), [IFoo])
 
 
-class Test_moduleProvides(_SilencePy3Deprecations):
+class Test_moduleProvides(unittest.TestCase):
 
     def _getFUT(self):
         from zope.interface.declarations import moduleProvides
@@ -1314,7 +1363,7 @@ class Test_moduleProvides(_SilencePy3Deprecations):
             assert False, 'TypeError not raised'
 
 
-class Test_getObjectSpecificationFallback(_SilencePy3Deprecations):
+class Test_getObjectSpecificationFallback(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import getObjectSpecificationFallback
@@ -1345,7 +1394,7 @@ class Test_getObjectSpecificationFallback(_SilencePy3Deprecations):
             pass
         directlyProvides(foo, IFoo)
         spec = self._callFUT(foo)
-        self.failUnless(spec is foo.__provides__)
+        self.assertTrue(spec is foo.__provides__)
 
     def test_existing_provides_is_not_spec(self):
         def foo():
@@ -1392,7 +1441,7 @@ class Test_getObjectSpecification(Test_getObjectSpecificationFallback):
         return getObjectSpecification(*args, **kw)
 
 
-class Test_providedByFallback(_SilencePy3Deprecations):
+class Test_providedByFallback(unittest.TestCase):
 
     def _callFUT(self, *args, **kw):
         from zope.interface.declarations import providedByFallback
@@ -1443,7 +1492,7 @@ class Test_providedByFallback(_SilencePy3Deprecations):
         foo.__providedBy__ = object()
         expected = foo.__provides__ = object()
         spec = self._callFUT(foo)
-        self.failUnless(spec is expected)
+        self.assertTrue(spec is expected)
 
     def test_w_providedBy_invalid_spec_w_provides_diff_provides_on_class(self):
         class Foo(object):
@@ -1453,7 +1502,7 @@ class Test_providedByFallback(_SilencePy3Deprecations):
         expected = foo.__provides__ = object()
         Foo.__provides__ = object()
         spec = self._callFUT(foo)
-        self.failUnless(spec is expected)
+        self.assertTrue(spec is expected)
 
     def test_w_providedBy_invalid_spec_w_provides_same_provides_on_class(self):
         from zope.interface.declarations import implementer
@@ -1477,7 +1526,7 @@ class Test_providedBy(Test_providedByFallback):
         return providedBy(*args, **kw)
 
 
-class ObjectSpecificationDescriptorFallbackTests(_SilencePy3Deprecations):
+class ObjectSpecificationDescriptorFallbackTests(unittest.TestCase):
 
     def _getTargetClass(self):
         from zope.interface.declarations \
@@ -1577,7 +1626,7 @@ class _MonkeyDict(object):
 def test_suite():
     return unittest.TestSuite((
         unittest.makeSuite(DeclarationTests),
-        unittest.makeSuite(ImplementsTests),
+        unittest.makeSuite(TestImplements),
         unittest.makeSuite(Test_implementedByFallback),
         unittest.makeSuite(Test_implementedBy),
         unittest.makeSuite(Test_classImplementsOnly),

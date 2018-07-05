@@ -18,10 +18,10 @@ import weakref
 from zope.interface import providedBy
 from zope.interface import Interface
 from zope.interface import ro
-from zope.interface._compat import _u
+
 from zope.interface._compat import _normalize_name
 
-_BLANK = _u('')
+_BLANK = u''
 
 class BaseAdapterRegistry(object):
 
@@ -162,8 +162,6 @@ class BaseAdapterRegistry(object):
 
         # Keep track of how we got to `components`:
         lookups = []
-        # Keep track of how we got to `components`:
-        lookups = []
         for k in key:
             d = components.get(k)
             if d is None:
@@ -239,8 +237,6 @@ class BaseAdapterRegistry(object):
 
         # Keep track of how we got to `components`:
         lookups = []
-        # Keep track of how we got to `components`:
-        lookups = []
         for k in key:
             d = components.get(k)
             if d is None:
@@ -270,8 +266,7 @@ class BaseAdapterRegistry(object):
             # is often a problem when an interface is slated for
             # removal; a hold-over entry in the registry can make it
             # difficult to remove such interfaces.
-            if _BLANK in components:
-                del components[_BLANK]
+            del components[_BLANK]
             for comp, k in reversed(lookups):
                 d = comp[k]
                 if d:
