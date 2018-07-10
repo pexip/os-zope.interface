@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3-dbg
 
 import zope.interface
 print(zope.interface)

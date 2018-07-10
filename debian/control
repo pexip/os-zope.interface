@@ -5,21 +5,26 @@ Maintainer: Pexip AS <packaging@pexip.com>
 XSBC-Pexip-Original-Maintainer: Debian/Ubuntu Zope Team <pkg-zope-developers@lists.alioth.debian.org>
 XSBC-Pexip-Original-Uploaders: Brian Sutherland <brian@vanguardistas.net>,
            Fabio Tranchitella <kobold@debian.org>,
-           Barry Warsaw <barry@debian.org>
+           Barry Warsaw <barry@debian.org>,
 Build-Depends: debhelper (>= 9),
                dh-python,
-               python-all-dev (>= 2.6.6-3~),
-               python-all-dbg,
+               dpkg-dev (>= 1.16.1~),
+               libpython-all-dbg,
+               libpython-all-dev,
+               libpython3-all-dbg,
+               libpython3-all-dev,
+               python-all-dbg:any,
+               python-all-dev:any,
                python-setuptools,
                python-zope.event,
-               python3-all-dev,
-               python3-all-dbg,
+               python3-all-dbg:any,
+               python3-all-dev:any,
                python3-setuptools,
-               python3-zope.event,
-Standards-Version: 3.9.5
+               python3-zope.event
+Standards-Version: 3.9.8
 X-Python-Version: >= 2.6
 X-Python3-Version: >= 3.2
-XS-Testsuite: autopkgtest
+Testsuite: autopkgtest
 Homepage: http://pypi.python.org/pypi/zope.interface
 Vcs-Svn: svn://anonscm.debian.org/pkg-zope/zope.interface/trunk
 Vcs-Browser: http://svn.debian.org/viewsvn/pkg-zope/zope.interface/trunk
@@ -27,7 +32,7 @@ XS-Pexip-Upstream: http://ftp.debian.org/debian/ stretch
 
 Package: python-zope.interface
 Architecture: any
-Depends: ${python:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends}
 Provides: python-zope, python-zopeinterface, ${python:Provides}
 Replaces: python-zope, python-zopeinterface
 Conflicts: python-zope, python-zopeinterface, zope3
@@ -37,15 +42,15 @@ Description: Interfaces for Python
  or contract. So, this package can be considered as implementation of the
  Design By Contract methodology support in Python.
  .
- This is the Python 3 version.
+ This is the Python 2 version.
 
 Package: python-zope.interface-dbg
 Priority: extra
 Section: debug
 Architecture: any
 Pre-Depends: dpkg (>= 1.17.5)
-Depends: python-zope.interface (= ${binary:Version}),
-         python-dbg,
+Depends: python-dbg,
+         python-zope.interface (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Conflicts: python-zopeinterface-dbg
@@ -61,7 +66,7 @@ Description: Interfaces for Python (debug extension)
 
 Package: python3-zope.interface
 Architecture: any
-Depends: ${python3:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${python3:Depends}, ${shlibs:Depends}
 Provides: python3-zope, ${python3:Provides}
 Description: Interfaces for Python3
  This package provides an implementation of object interfaces for Python.
@@ -76,8 +81,8 @@ Priority: extra
 Section: debug
 Architecture: any
 Pre-Depends: dpkg (>= 1.17.5)
-Depends: python3-zope.interface (= ${binary:Version}),
-         python3-dbg,
+Depends: python3-dbg,
+         python3-zope.interface (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Interfaces for Python3 (debug extension)
