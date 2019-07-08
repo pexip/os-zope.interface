@@ -1,3 +1,9 @@
+zope.interface (4.3.2-1pexip2) pexip; urgency=medium
+
+  * Python3
+
+ -- Carl Chipperfield <carl@pexip.com>  Sat, 22 Jun 2019 00:22:27 +0000
+
 zope.interface (4.3.2-1pexip1) pexip; urgency=medium
 
   * Migrate to Stretch
