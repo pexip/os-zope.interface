@@ -1,3 +1,9 @@
+zope.interface (4.3.2-1pexip3) pexip; urgency=medium
+
+  * Buster rebuild
+
+ -- Vincent Sanders <vince@pexip.com>  Wed, 08 Jul 2020 15:27:34 +0100
+
 zope.interface (4.3.2-1pexip2) pexip; urgency=medium
 
   * Python3
