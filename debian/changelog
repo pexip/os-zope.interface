@@ -1,3 +1,98 @@
+zope.interface (5.2.0-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Use secure URI in Homepage field.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+  [ Pierre-Elliott Bécue ]
+  * New upstream release 5.2.0
+  * Bump Standards-Version to 4.5.1
+  * d/watch: move to v4
+
+ -- Pierre-Elliott Bécue <peb@debian.org>  Sat, 16 Jan 2021 20:36:07 +0100
+
+zope.interface (5.1.2-1) unstable; urgency=medium
+
+  [ Pierre-Elliott Bécue ]
+  * New upstream release 5.1.2 (Closes: #972265)
+  * Set myself to uploaders and make the Python Team the maintainer of
+    zope.interface
+
+  [ Ondřej Nový ]
+  * d/copyright: Use https protocol in Format field.
+  * d/control: Remove redundant Priority field in binary package.
+  * d/control: Add Vcs-* field.
+
+ -- Pierre-Elliott Bécue <peb@debian.org>  Sun, 18 Oct 2020 23:27:41 +0200
+
+zope.interface (5.1.0-1) unstable; urgency=medium
+
+  * New upstream release 5.1.0
+  * d/control:
+    - Update the Maintainer field
+    - Sets Rules-Requires-Root to no
+    - Drop Testsuite field
+    - Replace old priority extra by optional for the debug package
+    - Drop Pre-Depends: dpkg for the -dbg package.
+  * Switch to debhelper-compat
+  * d/copyright:
+    - Drop osolete Files-excluded field.
+  * d/watch: use https for pypi.debian.net
+  * d/rules:
+    - Set hardening options
+  * Add a d/gbp.conf
+
+ -- Pierre-Elliott Bécue <peb@debian.org>  Fri, 04 Sep 2020 23:16:12 +0200
+
+zope.interface (4.7.1-2) unstable; urgency=medium
+
+  * QA upload.
+  * Drop python2 support; Closes: #938909
+
+ -- Sandro Tosi <morph@debian.org>  Thu, 23 Apr 2020 10:23:43 -0400
+
+zope.interface (4.7.1-1) unstable; urgency=medium
+
+  * QA upload.
+  * Bump standards version.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 26 Feb 2020 12:27:19 +0100
+
+zope.interface (4.6.0-4) unstable; urgency=medium
+
+  * QA upload.
+  * Use python2 / python2-dbg in the autopkg tests.
+  * Bump standards version.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 07 Jan 2020 14:59:22 +0100
+
+zope.interface (4.6.0-3) unstable; urgency=medium
+
+  * QA upload.
+  * python-zope.interface-dbg: Depend on python2-dbg.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 06 Jan 2020 16:41:01 +0100
+
+zope.interface (4.6.0-2) unstable; urgency=medium
+
+  * QA upload.
+  * Drop build-dependency on removed python-zope.event. Downgrades: #938909.
+  * Disable testsuite for python 2, it needs python-zope.event.
+    (keep testsuite enabled for python 3)
+  * Fix clean target.
+
+ -- Peter Michael Green <plugwash@debian.org>  Sat, 07 Dec 2019 07:00:43 +0000
+
+zope.interface (4.6.0-1) unstable; urgency=medium
+
+  * QA upload.
+  * Orphan the package. Closes: #869464.
+  * New upstream version.
+  * Fix lintian warnings.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 05 Sep 2019 13:09:40 +0200
+
 zope.interface (4.3.2-1) unstable; urgency=medium
 
   * New upstream release.

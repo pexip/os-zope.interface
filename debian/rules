@@ -1,13 +1,13 @@
 #!/usr/bin/make -f
 
 export PYBUILD_NAME=zope.interface
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 #export PYBUILD_VERBOSE=1
 #export DH_VERBOSE=1
 
 %:
-	dh $@ --with python2,python3 --buildsystem=pybuild
+	dh $@ --with python3 --buildsystem=pybuild
 
-package=python-zope.interface
 package3=python3-zope.interface
 
 include /usr/share/dpkg/architecture.mk
@@ -19,49 +19,20 @@ ifneq ($(DEB_BUILD_MULTIARCH),$(DEB_HOST_MULTIARCH))
 endif
 
 override_dh_auto_build:
-	set -xe; for pv in $(shell pyversions -vr); do \
-		$(SET_CROSS_ENV) python$$pv setup.py build; \
-	done
 	set -xe; for pv in $(shell py3versions -sv); do \
 		$(SET_CROSS_ENV) python$$pv setup.py build; \
 	done
 
 override_dh_auto_install:
 	set -xe; \
-	for pv in $(shell pyversions -vr); do \
-		$(SET_CROSS_ENV) python$$pv setup.py install --install-layout=deb \
-			--root $(CURDIR)/debian/$(package); \
-	done
-	set -xe; \
 	for pv in $(shell py3versions -vs); do \
 		$(SET_CROSS_ENV) python$$pv setup.py install --install-layout=deb \
 			--root $(CURDIR)/debian/$(package3); \
 	done
 	# Remove C sources.
-	find debian/$(package) -name '*.c' | xargs -r rm -f
 	find debian/$(package3) -name '*.c' | xargs -r rm -f
 
 override_dh_install:
-	# remove C source
-	find debian/$(package) -name '*.c' | xargs -r rm -f
-	# remove debug symbols
-	#rm debian/$(package)/usr/lib/python*/*-packages/zope/interface/_zope_interface_coptimizations_d.so
-	# zope.interface provides the zope namespace __init__.py
-	for pv in $(shell pyversions -vr debian/control); do \
-	    cp src/zope/__init__.py debian/$(package)/usr/lib/python$$pv/*-packages/zope/; \
-	done
-	# python-zope.interface-dbg package
-	for pv in $(shell pyversions -vr debian/control); do \
-	    $(SET_CROSS_ENV) python$$pv-dbg setup.py install \
-	    --no-compile --single-version-externally-managed \
-	    $(py_setup_install_args) --root=debian/$(package)-dbg \
-	    --install-layout=deb; \
-	done
-	find debian/$(package)-dbg
-	find debian/$(package)-dbg ! -type d ! -name '*.so' | xargs rm -f
-	find debian/$(package)-dbg -depth -empty -exec rmdir {} \;
-
-
 	# remove C source
 	find debian/$(package3) -name '*.c' | xargs -r rm -f
 	# remove debug symbols
@@ -83,17 +54,18 @@ override_dh_install:
 
 override_dh_installdocs:
 	dh_installdocs
-	dh_installdocs -p$(package) README.rst
-	dh_installdocs -p$(package)-dbg --link-doc=$(package)
-
 	dh_installdocs -p$(package3) README.rst
 	dh_installdocs -p$(package3)-dbg --link-doc=$(package3)
 
 override_dh_installchangelogs:
 	dh_installchangelogs
-	dh_installchangelogs -p$(package) CHANGES.rst
 	dh_installchangelogs -p$(package3) CHANGES.rst
 
 override_dh_strip:
-	dh_strip -p$(package) --dbg-package=$(package)-dbg
 	dh_strip -p$(package3) --dbg-package=$(package3)-dbg
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -f .eggs/README.txt
+	rm -f src/zope.interface.egg-info/requires.txt
+	rm -f src/zope/interface/_zope_interface_coptimizations.*.so
