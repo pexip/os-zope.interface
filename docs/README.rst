@@ -1,6 +1,8 @@
-==========
-Interfaces
-==========
+============
+ Interfaces
+============
+
+.. currentmodule:: zope.interface
 
 Interfaces are objects that specify (document) the external behavior
 of objects that "provide" them.  An interface specifies behavior
@@ -36,7 +38,7 @@ Interfaces are defined using Python ``class`` statements:
 
 In the example above, we've created an interface, :class:`IFoo`.  We
 subclassed :class:`zope.interface.Interface`, which is an ancestor interface for
-all interfaces, much as `object` is an ancestor of all new-style
+all interfaces, much as ``object`` is an ancestor of all new-style
 classes [#create]_.   The interface is not a class, it's an Interface,
 an instance of :class:`zope.interface.interface.InterfaceClass`:
 
@@ -64,23 +66,23 @@ and even its module:
 .. doctest::
 
   >>> IFoo.__module__
-  '__builtin__'
+  'builtins'
 
 The interface defined two attributes:
 
-`x`
+``x``
   This is the simplest form of attribute definition.  It has a name
   and a doc string.  It doesn't formally specify anything else.
 
-`bar`
+``bar``
   This is a method.  A method is defined via a function definition.  A
   method is simply an attribute constrained to be a callable with a
   particular signature, as provided by the function definition.
 
-  Note that `bar` doesn't take a `self` argument.  Interfaces document
+  Note that ``bar`` doesn't take a ``self`` argument.  Interfaces document
   how an object is *used*.  When calling instance methods, you don't
-  pass a `self` argument, so a `self` argument isn't included in the
-  interface signature.  The `self` argument in instance methods is
+  pass a ``self`` argument, so a ``self`` argument isn't included in the
+  interface signature.  The ``self`` argument in instance methods is
   really an implementation detail of Python instances. Other objects,
   besides instances can provide interfaces and their methods might not
   be instance methods. For example, modules can provide interfaces and
@@ -105,7 +107,7 @@ syntax:
 
   >>> IFoo.get('y')
 
-You can use `in` to determine if an interface defines a name:
+You can use ``in`` to determine if an interface defines a name:
 
 .. doctest::
 
@@ -175,13 +177,13 @@ declaring interfaces.
 Declaring implemented interfaces
 --------------------------------
 
-The most common way to declare interfaces is using the implements
-function in a class statement:
+The most common way to declare interfaces is using the `implementer`
+decorator on a class:
 
 .. doctest::
 
-  >>> class Foo:
-  ...     zope.interface.implements(IFoo)
+  >>> @zope.interface.implementer(IFoo)
+  ... class Foo:
   ...
   ...     def __init__(self, x=None):
   ...         self.x = x
@@ -193,8 +195,8 @@ function in a class statement:
   ...         return "Foo(%s)" % self.x
 
 
-In this example, we declared that `Foo` implements `IFoo`. This means
-that instances of `Foo` provide `IFoo`.  Having made this declaration,
+In this example, we declared that ``Foo`` implements ``IFoo``. This means
+that instances of ``Foo`` provide ``IFoo``.  Having made this declaration,
 there are several ways we can introspect the declarations.  First, we
 can ask an interface whether it is implemented by a class:
 
@@ -211,19 +213,19 @@ And we can ask whether an interface is provided by an object:
   >>> IFoo.providedBy(foo)
   True
 
-Of course, `Foo` doesn't provide `IFoo`, it implements it:
+Of course, ``Foo`` doesn't *provide* ``IFoo``, it *implements* it:
 
 .. doctest::
 
   >>> IFoo.providedBy(Foo)
   False
 
-We can also ask what interfaces are implemented by an object:
+We can also ask what interfaces are implemented by a class:
 
 .. doctest::
 
   >>> list(zope.interface.implementedBy(Foo))
-  [<InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.IFoo>]
 
 It's an error to ask for interfaces implemented by a non-callable
 object:
@@ -245,30 +247,29 @@ Similarly, we can ask what interfaces are provided by an object:
 .. doctest::
 
   >>> list(zope.interface.providedBy(foo))
-  [<InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.IFoo>]
   >>> list(zope.interface.providedBy(Foo))
   []
 
 We can declare interfaces implemented by other factories (besides
-classes).  We do this using a Python-2.4-style decorator named
-`implementer`.  In versions of Python before 2.4, this looks like:
+classes).  We do this using the same `implementer` decorator.
 
 .. doctest::
 
-  >>> def yfoo(y):
+  >>> @zope.interface.implementer(IFoo)
+  ... def yfoo(y):
   ...     foo = Foo()
   ...     foo.y = y
   ...     return foo
-  >>> yfoo = zope.interface.implementer(IFoo)(yfoo)
 
   >>> list(zope.interface.implementedBy(yfoo))
-  [<InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.IFoo>]
 
-Note that the implementer decorator may modify it's argument. Callers
+Note that the implementer decorator may modify its argument. Callers
 should not assume that a new object is created.
 
 Using implementer also works on callable objects. This is used by
-zope.formlib, as an example:
+:py:mod:`zope.formlib`, as an example:
 
 .. doctest::
 
@@ -281,31 +282,35 @@ zope.formlib, as an example:
   >>> yfoo = zope.interface.implementer(IFoo)(yfoo)
 
   >>> list(zope.interface.implementedBy(yfoo))
-  [<InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.IFoo>]
 
 XXX: Double check and update these version numbers:
 
-In zope.interface 3.5.2 and lower, the implementer decorator can not
+In :py:mod:`zope.interface` 3.5.2 and lower, the implementer decorator can not
 be used for classes, but in 3.6.0 and higher it can:
 
 .. doctest::
 
   >>> Foo = zope.interface.implementer(IFoo)(Foo)
   >>> list(zope.interface.providedBy(Foo()))
-  [<InterfaceClass __builtin__.IFoo>]
-  
-Note that class decorators using the @implementer(IFoo) syntax are only 
+  [<InterfaceClass builtins.IFoo>]
+
+Note that class decorators using the ``@implementer(IFoo)`` syntax are only
 supported in Python 2.6 and later.
 
+.. autofunction:: implementer
+   :noindex:
+
+   .. XXX: Duplicate description.
 
 Declaring provided interfaces
 -----------------------------
 
 We can declare interfaces directly provided by objects.  Suppose that
-we want to document what the `__init__` method of the `Foo` class
-does.  It's not *really* part of `IFoo`.  You wouldn't normally call
-the `__init__` method on Foo instances.  Rather, the `__init__` method
-is part of the `Foo`'s `__call__` method:
+we want to document what the ``__init__`` method of the ``Foo`` class
+does.  It's not *really* part of ``IFoo``.  You wouldn't normally call
+the ``__init__`` method on Foo instances.  Rather, the ``__init__`` method
+is part of ``Foo``'s ``__call__`` method:
 
 .. doctest::
 
@@ -330,19 +335,18 @@ And then, we'll see that Foo provides some interfaces:
 .. doctest::
 
   >>> list(zope.interface.providedBy(Foo))
-  [<InterfaceClass __builtin__.IFooFactory>]
+  [<InterfaceClass builtins.IFooFactory>]
   >>> IFooFactory.providedBy(Foo)
   True
 
 Declaring class interfaces is common enough that there's a special
-declaration function for it, `classProvides`, that allows the
-declaration from within a class statement:
+decorator for it, `provider`:
 
 .. doctest::
 
-  >>> class Foo2:
-  ...     zope.interface.implements(IFoo)
-  ...     zope.interface.classProvides(IFooFactory)
+  >>> @zope.interface.implementer(IFoo)
+  ... @zope.interface.provider(IFooFactory)
+  ... class Foo2:
   ...
   ...     def __init__(self, x=None):
   ...         self.x = x
@@ -354,18 +358,18 @@ declaration from within a class statement:
   ...         return "Foo(%s)" % self.x
 
   >>> list(zope.interface.providedBy(Foo2))
-  [<InterfaceClass __builtin__.IFooFactory>]
+  [<InterfaceClass builtins.IFooFactory>]
   >>> IFooFactory.providedBy(Foo2)
   True
 
-There's a similar function, `moduleProvides`, that supports interface
+There's a similar function, ``moduleProvides``, that supports interface
 declarations from within module definitions.  For example, see the use
-of `moduleProvides` call in `zope.interface.__init__`, which declares that
-the package `zope.interface` provides `IInterfaceDeclaration`.
+of ``moduleProvides`` call in ``zope.interface.__init__``, which declares that
+the package ``zope.interface`` provides ``IInterfaceDeclaration``.
 
 Sometimes, we want to declare interfaces on instances, even though
 those instances get interfaces from their classes.  Suppose we create
-a new interface, `ISpecial`:
+a new interface, ``ISpecial``:
 
 .. doctest::
 
@@ -374,8 +378,8 @@ a new interface, `ISpecial`:
   ...     def brag():
   ...         "Brag about being special"
 
-We can make an existing foo instance special by providing `reason`
-and `brag` attributes:
+We can make an existing foo instance special by providing ``reason``
+and ``brag`` attributes:
 
 .. doctest::
 
@@ -401,18 +405,23 @@ then the new interface is included in the provided interfaces:
   >>> ISpecial.providedBy(foo)
   True
   >>> list(zope.interface.providedBy(foo))
-  [<InterfaceClass __builtin__.ISpecial>, <InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.ISpecial>, <InterfaceClass builtins.IFoo>]
 
 We can find out what interfaces are directly provided by an object:
 
 .. doctest::
 
   >>> list(zope.interface.directlyProvidedBy(foo))
-  [<InterfaceClass __builtin__.ISpecial>]
+  [<InterfaceClass builtins.ISpecial>]
 
   >>> newfoo = Foo()
   >>> list(zope.interface.directlyProvidedBy(newfoo))
   []
+
+.. autofunction:: provider
+   :noindex:
+
+   .. XXX: Duplicate description.
 
 Inherited declarations
 ----------------------
@@ -421,34 +430,34 @@ Normally, declarations are inherited:
 
 .. doctest::
 
-  >>> class SpecialFoo(Foo):
-  ...     zope.interface.implements(ISpecial)
+  >>> @zope.interface.implementer(ISpecial)
+  ... class SpecialFoo(Foo):
   ...     reason = 'I just am'
   ...     def brag(self):
   ...         return "I'm special because %s" % self.reason
 
   >>> list(zope.interface.implementedBy(SpecialFoo))
-  [<InterfaceClass __builtin__.ISpecial>, <InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.ISpecial>, <InterfaceClass builtins.IFoo>]
 
   >>> list(zope.interface.providedBy(SpecialFoo()))
-  [<InterfaceClass __builtin__.ISpecial>, <InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.ISpecial>, <InterfaceClass builtins.IFoo>]
 
 Sometimes, you don't want to inherit declarations.  In that case, you
-can use `implementsOnly`, instead of `implements`:
+can use ``implementer_only``, instead of ``implementer``:
 
 .. doctest::
 
-  >>> class Special(Foo):
-  ...     zope.interface.implementsOnly(ISpecial)
+  >>> @zope.interface.implementer_only(ISpecial)
+  ... class Special(Foo):
   ...     reason = 'I just am'
   ...     def brag(self):
   ...         return "I'm special because %s" % self.reason
 
   >>> list(zope.interface.implementedBy(Special))
-  [<InterfaceClass __builtin__.ISpecial>]
+  [<InterfaceClass builtins.ISpecial>]
 
   >>> list(zope.interface.providedBy(Special()))
-  [<InterfaceClass __builtin__.ISpecial>]
+  [<InterfaceClass builtins.ISpecial>]
 
 External declarations
 ---------------------
@@ -456,7 +465,7 @@ External declarations
 Normally, we make implementation declarations as part of a class
 definition. Sometimes, we may want to make declarations from outside
 the class definition. For example, we might want to declare interfaces
-for classes that we didn't write.  The function `classImplements` can
+for classes that we didn't write.  The function ``classImplements`` can
 be used for this purpose:
 
 .. doctest::
@@ -466,9 +475,12 @@ be used for this purpose:
 
   >>> zope.interface.classImplements(C, IFoo)
   >>> list(zope.interface.implementedBy(C))
-  [<InterfaceClass __builtin__.IFoo>]
+  [<InterfaceClass builtins.IFoo>]
 
-We can use `classImplementsOnly` to exclude inherited interfaces:
+.. autofunction:: classImplements
+   :noindex:
+
+We can use ``classImplementsOnly`` to exclude inherited interfaces:
 
 .. doctest::
 
@@ -477,9 +489,12 @@ We can use `classImplementsOnly` to exclude inherited interfaces:
 
   >>> zope.interface.classImplementsOnly(C, ISpecial)
   >>> list(zope.interface.implementedBy(C))
-  [<InterfaceClass __builtin__.ISpecial>]
+  [<InterfaceClass builtins.ISpecial>]
 
+.. autofunction:: classImplementsOnly
+   :noindex:
 
+   .. XXX: Duplicate description.
 
 Declaration Objects
 -------------------
@@ -499,23 +514,23 @@ declarations. Here's a silly example:
 
 .. doctest::
 
-  >>> class Special2(Foo):
-  ...     zope.interface.implementsOnly(
-  ...          zope.interface.implementedBy(Foo),
-  ...          ISpecial,
-  ...          )
+  >>> @zope.interface.implementer_only(
+  ...     zope.interface.implementedBy(Foo),
+  ...     ISpecial,
+  ... )
+  ... class Special2(object):
   ...     reason = 'I just am'
   ...     def brag(self):
   ...         return "I'm special because %s" % self.reason
 
 The declaration here is almost the same as
-``zope.interface.implements(ISpecial)``, except that the order of
+``zope.interface.implementer(ISpecial)``, except that the order of
 interfaces in the resulting declaration is different:
 
 .. doctest::
 
   >>> list(zope.interface.implementedBy(Special2))
-  [<InterfaceClass __builtin__.IFoo>, <InterfaceClass __builtin__.ISpecial>]
+  [<InterfaceClass builtins.IFoo>, <InterfaceClass builtins.ISpecial>]
 
 
 Interface Inheritance
@@ -543,14 +558,14 @@ the other interfaces as base interfaces:
   ...
 
   >>> IBaz.__bases__
-  (<InterfaceClass __builtin__.IFoo>, <InterfaceClass __builtin__.IBlat>)
+  (<InterfaceClass builtins.IFoo>, <InterfaceClass builtins.IBlat>)
 
   >>> names = list(IBaz)
   >>> names.sort()
   >>> names
   ['bar', 'eek', 'x', 'y']
 
-Note that `IBaz` overrides eek:
+Note that ``IBaz`` overrides ``eek``:
 
 .. doctest::
 
@@ -559,7 +574,7 @@ Note that `IBaz` overrides eek:
   >>> IBaz['eek'].__doc__
   'eek in baz blah'
 
-We were careful to override eek in a compatible way.  When extending
+We were careful to override ``eek`` in a compatible way.  When extending
 an interface, the extending interface should be compatible [#compat]_
 with the extended interfaces.
 
@@ -579,7 +594,7 @@ Note that interfaces don't extend themselves:
   >>> IBaz.extends(IBaz)
   False
 
-Sometimes we wish they did, but we can, instead use `isOrExtends`:
+Sometimes we wish they did, but we can instead use ``isOrExtends``:
 
 .. doctest::
 
@@ -592,7 +607,7 @@ Sometimes we wish they did, but we can, instead use `isOrExtends`:
 
 When we iterate over an interface, we get all of the names it defines,
 including names defined by base interfaces. Sometimes, we want *just*
-the names defined by the interface directly. We bane use the `names`
+the names defined by the interface directly. We can use the ``names``
 method for that:
 
 .. doctest::
@@ -625,8 +640,8 @@ inherited from the most specific interface. For example, with:
   >>> class ISub(IBase1, IBase2):
   ...     pass
 
-ISub's definition of foo is the one from IBase2, since IBase2 is more
-specific that IBase:
+``ISub``'s definition of ``foo`` is the one from ``IBase2``, since ``IBase2`` is more
+specific than ``IBase``:
 
 .. doctest::
 
@@ -656,12 +671,13 @@ interfaces that they declare:
 
 .. doctest::
 
-  >>> class Baz(object):
-  ...     zope.interface.implements(IBaz)
+  >>> @zope.interface.implementer(IBaz)
+  ... class Baz(object):
+  ...     pass
 
   >>> baz_implements = zope.interface.implementedBy(Baz)
   >>> baz_implements.__bases__
-  (<InterfaceClass __builtin__.IBaz>, <implementedBy ...object>)
+  (<InterfaceClass builtins.IBaz>, <implementedBy ...object>)
 
   >>> baz_implements.extends(IFoo)
   True
@@ -671,23 +687,38 @@ interfaces that they declare:
   >>> baz_implements.isOrExtends(baz_implements)
   True
 
-Specifications (interfaces and declarations) provide an `__sro__`
+Specifications (interfaces and declarations) provide an ``__sro__``
 that lists the specification and all of it's ancestors:
 
 .. doctest::
 
   >>> from pprint import pprint
   >>> pprint(baz_implements.__sro__)
-  (<implementedBy __builtin__.Baz>,
-   <InterfaceClass __builtin__.IBaz>,
-   <InterfaceClass __builtin__.IFoo>,
-   <InterfaceClass __builtin__.IBlat>,
-   <InterfaceClass zope.interface.Interface>,
-   <implementedBy ...object>)
-
+  (<implementedBy builtins.Baz>,
+   <InterfaceClass builtins.IBaz>,
+   <InterfaceClass builtins.IFoo>,
+   <InterfaceClass builtins.IBlat>,
+   <implementedBy ...object>,
+   <InterfaceClass zope.interface.Interface>)
+  >>> class IBiz(zope.interface.Interface):
+  ...    pass
+  >>> @zope.interface.implementer(IBiz)
+  ... class Biz(Baz):
+  ...    pass
+  >>> pprint(zope.interface.implementedBy(Biz).__sro__)
+  (<implementedBy builtins.Biz>,
+   <InterfaceClass builtins.IBiz>,
+   <implementedBy builtins.Baz>,
+   <InterfaceClass builtins.IBaz>,
+   <InterfaceClass builtins.IFoo>,
+   <InterfaceClass builtins.IBlat>,
+   <implementedBy ...object>,
+   <InterfaceClass zope.interface.Interface>)
 
 Tagged Values
 =============
+
+.. autofunction:: taggedValue
 
 Interfaces and attribute descriptions support an extension mechanism,
 borrowed from UML, called "tagged values" that lets us store extra
@@ -718,7 +749,7 @@ attribute definitions are created:
   ...     __call__.return_type = IBaz
 
   >>> IBazFactory['__call__'].getTaggedValue('return_type')
-  <InterfaceClass __builtin__.IBaz>
+  <InterfaceClass builtins.IBaz>
 
 Tagged values can also be defined from within an interface definition:
 
@@ -729,13 +760,38 @@ Tagged values can also be defined from within an interface definition:
   >>> IWithTaggedValues.getTaggedValue('squish')
   'squash'
 
+Tagged values are inherited in the same way that attribute and method
+descriptions are. Inheritance can be ignored by using the "direct"
+versions of functions.
+
+.. doctest::
+
+   >>> class IExtendsIWithTaggedValues(IWithTaggedValues):
+   ...     zope.interface.taggedValue('child', True)
+   >>> IExtendsIWithTaggedValues.getTaggedValue('child')
+   True
+   >>> IExtendsIWithTaggedValues.getDirectTaggedValue('child')
+   True
+   >>> IExtendsIWithTaggedValues.getTaggedValue('squish')
+   'squash'
+   >>> print(IExtendsIWithTaggedValues.queryDirectTaggedValue('squish'))
+   None
+   >>> IExtendsIWithTaggedValues.setTaggedValue('squish', 'SQUASH')
+   >>> IExtendsIWithTaggedValues.getTaggedValue('squish')
+   'SQUASH'
+   >>> IExtendsIWithTaggedValues.getDirectTaggedValue('squish')
+   'SQUASH'
+
+
 Invariants
 ==========
+
+.. autofunction:: invariant
 
 Interfaces can express conditions that must hold for objects that
 provide them. These conditions are expressed using one or more
 invariants.  Invariants are callable objects that will be called with
-an object that provides an interface. An invariant raises an `Invalid`
+an object that provides an interface. An invariant raises an ``Invalid``
 exception if the condition doesn't hold.  Here's an example:
 
 .. doctest::
@@ -763,9 +819,8 @@ Interfaces have a method for checking their invariants:
 
 .. doctest::
 
-  >>> class Range(object):
-  ...     zope.interface.implements(IRange)
-  ...
+  >>> @zope.interface.implementer(IRange)
+  ... class Range(object):
   ...     def __init__(self, min, max):
   ...         self.min, self.max = min, max
   ...
@@ -780,9 +835,9 @@ Interfaces have a method for checking their invariants:
   RangeError: Range(2, 1)
 
 If you have multiple invariants, you may not want to stop checking
-after the first error.  If you pass a list to `validateInvariants`,
-then a single `Invalid` exception will be raised with the list of
-exceptions as it's argument:
+after the first error.  If you pass a list to ``validateInvariants``,
+then a single ``Invalid`` exception will be raised with the list of
+exceptions as its argument:
 
 .. doctest::
 
@@ -790,17 +845,16 @@ exceptions as it's argument:
   >>> errors = []
   >>> try:
   ...     IRange.validateInvariants(Range(2,1), errors)
-  ... except Invalid, e:
+  ... except Invalid as e:
   ...     str(e)
   '[RangeError(Range(2, 1))]'
-  
+
 And the list will be filled with the individual exceptions:
 
 .. doctest::
 
   >>> errors
   [RangeError(Range(2, 1))]
-
 
   >>> del errors[:]
 
@@ -809,9 +863,10 @@ Adaptation
 
 Interfaces can be called to perform adaptation.
 
-The semantics are based on those of the PEP 246 adapt function.
+The semantics are based on those of the  :pep:`246` ``adapt``
+function.
 
-If an object cannot be adapted, then a TypeError is raised:
+If an object cannot be adapted, then a ``TypeError`` is raised:
 
 .. doctest::
 
@@ -821,8 +876,7 @@ If an object cannot be adapted, then a TypeError is raised:
   >>> I(0)
   Traceback (most recent call last):
   ...
-  TypeError: ('Could not adapt', 0, <InterfaceClass __builtin__.I>)
-
+  TypeError: ('Could not adapt', 0, <InterfaceClass builtins.I>)
 
 
 unless an alternate value is provided as a second positional argument:
@@ -836,26 +890,52 @@ If an object already implements the interface, then it will be returned:
 
 .. doctest::
 
-  >>> class C(object):
-  ...     zope.interface.implements(I)
+  >>> @zope.interface.implementer(I)
+  ... class C(object):
+  ...     pass
 
   >>> obj = C()
   >>> I(obj) is obj
   True
 
-If an object implements __conform__, then it will be used:
+:pep:`246` outlines a requirement:
+
+    When the object knows about the [interface], and either considers
+    itself compliant, or knows how to wrap itself suitably.
+
+This is handled with ``__conform__``. If an object implements
+``__conform__``, then it will be used to give the object the chance to
+decide if it knows about the interface.
 
 .. doctest::
 
-  >>> class C(object):
-  ...     zope.interface.implements(I)
+  >>> @zope.interface.implementer(I)
+  ... class C(object):
   ...     def __conform__(self, proto):
   ...          return 0
 
   >>> I(C())
   0
 
-Adapter hooks (see __adapt__) will also be used, if present:
+If ``__conform__`` returns ``None`` (because the object is unaware of
+the interface), then the rest of the adaptation process will continue.
+Here, we demonstrate that if the object already provides the
+interface, it is returned.
+
+.. doctest::
+
+  >>> @zope.interface.implementer(I)
+  ... class C(object):
+  ...     def __conform__(self, proto):
+  ...          return None
+
+  >>> c = C()
+  >>> I(c) is c
+  True
+
+
+Adapter hooks (see ``__adapt__``) will also be used, if present (after
+a ``__conform__`` method, if any, has been tried):
 
 .. doctest::
 
@@ -872,36 +952,44 @@ Adapter hooks (see __adapt__) will also be used, if present:
   >>> I(0)
   Traceback (most recent call last):
   ...
-  TypeError: ('Could not adapt', 0, <InterfaceClass __builtin__.I>)
+  TypeError: ('Could not adapt', 0, <InterfaceClass builtins.I>)
 
-__adapt__
----------
+``__adapt__``
+-------------
 
 .. doctest::
 
   >>> class I(zope.interface.Interface):
   ...     pass
 
-Interfaces implement the PEP 246 __adapt__ method.
+Interfaces implement the :pep:`246` ``__adapt__`` method to satisfy
+the requirement:
 
-This method is normally not called directly. It is called by the PEP
-246 adapt framework and by the interface __call__ operator.
+    When the [interface] knows about the object, and either the object
+    already complies or the [interface] knows how to suitably wrap the
+    object.
 
-The adapt method is responsible for adapting an object to the
-reciever.
+This method is normally not called directly. It is called by the
+:pep:`246` adapt framework and by the interface ``__call__`` operator
+once ``__conform__`` (if any) has failed.
 
-The default version returns None:
+The ``adapt`` method is responsible for adapting an object to the
+receiver.
+
+The default version returns ``None`` (because by default no interface
+"knows how to suitably wrap the object"):
 
 .. doctest::
 
   >>> I.__adapt__(0)
 
-unless the object given provides the interface:
+unless the object given provides the interface ("the object already complies"):
 
 .. doctest::
 
-  >>> class C(object):
-  ...     zope.interface.implements(I)
+  >>> @zope.interface.implementer(I)
+  ... class C(object):
+  ...     pass
 
   >>> obj = C()
   >>> I.__adapt__(obj) is obj
@@ -909,7 +997,7 @@ unless the object given provides the interface:
 
 Adapter hooks can be provided (or removed) to provide custom
 adaptation. We'll install a silly hook that adapts 0 to 42.
-We install a hook by simply adding it to the adapter_hooks
+We install a hook by simply adding it to the ``adapter_hooks``
 list:
 
 .. doctest::
@@ -923,7 +1011,7 @@ list:
   >>> I.__adapt__(0)
   42
 
-Hooks must either return an adapter, or None if no adapter can
+Hooks must either return an adapter, or ``None`` if no adapter can
 be found.
 
 Hooks can be uninstalled by removing them from the list:
@@ -934,14 +1022,240 @@ Hooks can be uninstalled by removing them from the list:
   >>> I.__adapt__(0)
 
 
-.. [#create] The main reason we subclass `Interface` is to cause the
+It is possible to replace or customize the ``__adapt___``
+functionality for particular interfaces.
+
+.. doctest::
+
+   >>> class ICustomAdapt(zope.interface.Interface):
+   ...     @zope.interface.interfacemethod
+   ...     def __adapt__(self, obj):
+   ...          if isinstance(obj, str):
+   ...              return obj
+   ...          return super(type(ICustomAdapt), self).__adapt__(obj)
+
+   >>> @zope.interface.implementer(ICustomAdapt)
+   ... class CustomAdapt(object):
+   ...     pass
+   >>> ICustomAdapt('a string')
+   'a string'
+   >>> ICustomAdapt(CustomAdapt())
+   <CustomAdapt object at ...>
+
+.. seealso:: :func:`zope.interface.interfacemethod`, which explains
+   how to override functions in interface definitions and why, prior
+   to Python 3.6, the zero-argument version of `super` cannot be used.
+
+.. _global_persistence:
+
+Persistence, Sorting, Equality and Hashing
+==========================================
+
+.. tip:: For the practical implications of what's discussed below, and
+         some potential problems, see :ref:`spec_eq_hash`.
+
+Just like Python classes, interfaces are designed to inexpensively
+support persistence using Python's standard :mod:`pickle` module. This
+means that one process can send a *reference* to an interface to another
+process in the form of a byte string, and that other process can load
+that byte string and get the object that is that interface. The processes
+may be separated in time (one after the other), in space (running on
+different machines) or even be parts of the same process communicating
+with itself.
+
+We can demonstrate this. Observe how small the byte string needed to
+capture the reference is. Also note that since this is the same
+process, the identical object is found and returned:
+
+.. doctest::
+
+   >>> import sys
+   >>> import pickle
+   >>> class Foo(object):
+   ...    pass
+   >>> sys.modules[__name__].Foo = Foo # XXX, see below
+   >>> pickled_byte_string = pickle.dumps(Foo, 0)
+   >>> len(pickled_byte_string)
+   21
+   >>> imported = pickle.loads(pickled_byte_string)
+   >>> imported == Foo
+   True
+   >>> imported is Foo
+   True
+   >>> class IFoo(zope.interface.Interface):
+   ...     pass
+   >>> sys.modules[__name__].IFoo = IFoo # XXX, see below
+   >>> pickled_byte_string = pickle.dumps(IFoo, 0)
+   >>> len(pickled_byte_string)
+   22
+   >>> imported = pickle.loads(pickled_byte_string)
+   >>> imported is IFoo
+   True
+   >>> imported == IFoo
+   True
+
+The eagle-eyed reader will have noticed the two funny lines like
+``sys.modules[__name__].Foo = Foo``. What's that for? To understand,
+we must know a bit about how Python "pickles" (``pickle.dump`` or
+``pickle.dumps``) classes or interfaces.
+
+When Python pickles a class or an interface, it does so as a "global
+object" [#global_object]_. Global objects are expected to already
+exist (contrast this with pickling a string or an object instance,
+which creates a new object in the receiving process) with all their
+necessary state information (for classes and interfaces, the state
+information would be things like the list of methods and defined
+attributes) in the receiving process; the pickled byte string needs
+only contain enough data to look up that existing object; this is a
+*reference*. Not only does this minimize the amount of data required
+to persist such an object, it also facilitates changing the definition
+of the object over time: if a class or interface gains or loses
+methods or attributes, loading a previously pickled reference will use
+the *current definition* of the object.
+
+The *reference* to a global object that's stored in the byte string
+consists only of the object's ``__name__`` and ``__module__``. Before
+a global object *obj* is pickled, Python makes sure that the object being
+pickled is the same one that can be found at
+``getattr(sys.modules[obj.__module__], obj.__name__)``; if there is no
+such object, or it refers to a different object, pickling fails. The
+two funny lines make sure that holds, no matter how this example is
+run (using some doctest runners, it doesn't hold by default, unlike it
+normally would).
+
+We can show some examples of what happens when that condition doesn't
+hold. First, what if we change the global object and try to pickle the
+old one?
+
+.. doctest::
+
+   >>> sys.modules[__name__].Foo = 42
+   >>> pickle.dumps(Foo)
+   Traceback (most recent call last):
+   ...
+   _pickle.PicklingError: Can't pickle <class 'Foo'>: it's not the same object as builtins.Foo
+
+A consequence of this is that only one object of the given name can be
+defined and pickled at a time. If we were to try to define a new ``Foo``
+class (remembering that normally the ``sys.modules[__name__].Foo =``
+line is automatic), we still cannot pickle the old one:
+
+.. doctest::
+
+   >>> orig_Foo = Foo
+   >>> class Foo(object):
+   ...    pass
+   >>> sys.modules[__name__].Foo = Foo # XXX, see below
+   >>> pickle.dumps(orig_Foo)
+   Traceback (most recent call last):
+   ...
+   _pickle.PicklingError: Can't pickle <class 'Foo'>: it's not the same object as builtins.Foo
+
+Or what if there simply is no global object?
+
+.. doctest::
+
+   >>> del sys.modules[__name__].Foo
+   >>> pickle.dumps(Foo)
+   Traceback (most recent call last):
+   ...
+   _pickle.PicklingError: Can't pickle <class 'Foo'>: attribute lookup Foo on builtins failed
+
+Interfaces and classes behave the same in all those ways.
+
+.. rubric:: What's This Have To Do With Sorting, Equality and Hashing?
+
+Another important design consideration for interfaces is that they
+should be sortable. This permits them to be used, for example, as keys
+in a (persistent) `BTree <https://btrees.readthedocs.io>`_. As such,
+they define a total ordering, meaning that any given interface can
+definitively said to be greater than, less than, or equal to, any
+other interface. This relationship must be *stable* and hold the same
+across any two processes.
+
+An object becomes sortable by overriding the equality method
+``__eq__`` and at least one of the comparison methods (such as
+``__lt__``).
+
+Classes, on the other hand, are not sortable [#class_sort]_.
+Classes can only be tested for equality, and they implement this using
+object identity: ``class_a == class_b`` is equivalent to ``class_a is class_b``.
+
+In addition to being sortable, it's important for interfaces to be
+hashable so they can be used as keys in dictionaries or members of
+sets. This is done by implementing the ``__hash__`` method [#hashable]_.
+
+Classes are hashable, and they also implement this based on object
+identity, with the equivalent of ``id(class_a)``.
+
+To be both hashable and sortable, the hash method and the equality and
+comparison methods **must** `be consistent with each other
+<https://docs.python.org/3/reference/datamodel.html#object.__hash__>`_.
+That is, they must all be based on the same principle.
+
+Classes use the principle of identity to implement equality and
+hashing, but they don't implement sorting because identity isn't a
+stable sorting method (it is different in every process).
+
+Interfaces need to be sortable. In order for all three of hashing,
+equality and sorting to be consistent, interfaces implement them using
+the same principle as persistence. Interfaces are treated like "global
+objects" and sort and hash using the same information a *reference* to
+them would: their ``__name__`` and ``__module__``.
+
+In this way, hashing, equality and sorting are consistent with each
+other, and consistent with pickling:
+
+.. doctest::
+
+   >>> class IFoo(zope.interface.Interface):
+   ...     pass
+   >>> sys.modules[__name__].IFoo = IFoo
+   >>> f1 = IFoo
+   >>> pickled_f1 = pickle.dumps(f1)
+   >>> class IFoo(zope.interface.Interface):
+   ...     pass
+   >>> sys.modules[__name__].IFoo = IFoo
+   >>> IFoo == f1
+   True
+   >>> unpickled_f1 = pickle.loads(pickled_f1)
+   >>> unpickled_f1 == IFoo == f1
+   True
+
+This isn't quite the case for classes; note how ``f1`` wasn't equal to
+``Foo`` before pickling, but the unpickled value is:
+
+.. doctest::
+
+   >>> class Foo(object):
+   ...     pass
+   >>> sys.modules[__name__].Foo = Foo
+   >>> f1 = Foo
+   >>> pickled_f1 = pickle.dumps(Foo)
+   >>> class Foo(object):
+   ...     pass
+   >>> sys.modules[__name__].Foo = Foo
+   >>> f1 == Foo
+   False
+   >>> unpickled_f1 = pickle.loads(pickled_f1)
+   >>> unpickled_f1 == Foo # Surprise!
+   True
+   >>> unpickled_f1 == f1
+   False
+
+For more information, and some rare potential pitfalls, see
+:ref:`spec_eq_hash`.
+
+.. rubric:: Footnotes
+
+.. [#create] The main reason we subclass ``Interface`` is to cause the
              Python class statement to create an interface, rather
              than a class.
 
              It's possible to create interfaces by calling a special
              interface class directly.  Doing this, it's possible
              (and, on rare occasions, useful) to create interfaces
-             that don't descend from `Interface`.  Using this
+             that don't descend from ``Interface``.  Using this
              technique is beyond the scope of this document.
 
 .. [#factory] Classes are factories.  They can be called to create
@@ -953,8 +1267,24 @@ Hooks can be uninstalled by removing them from the list:
 .. [#compat] The goal is substitutability.  An object that provides an
              extending interface should be substitutable for an object
              that provides the extended interface.  In our example, an
-             object that provides IBaz should be usable whereever an
-             object that provides IBlat is expected.
+             object that provides ``IBaz`` should be usable wherever an
+             object that provides ``IBlat`` is expected.
 
-             The interface implementation doesn't enforce this.
+             The interface implementation doesn't enforce this,
              but maybe it should do some checks.
+
+.. [#class_sort] In Python 2, classes could be sorted, but the sort
+                 was not stable (it also used the identity principle)
+                 and not useful for persistence; this was considered a
+                 bug that was fixed in Python 3.
+
+.. [#hashable] In order to be hashable, you must implement both
+               ``__eq__``  and ``__hash__``. If you only implement
+               ``__eq__``, Python makes sure the type cannot be
+               used in a dictionary, set, or with :func:`hash`. In
+               Python 2, this wasn't the case, and forgetting to
+               override ``__hash__`` was a constant source of bugs.
+
+.. [#global_object] From the name of the pickle bytecode operator; it
+                    varies depending on the protocol but always
+                    includes "GLOBAL".

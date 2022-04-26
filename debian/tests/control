@@ -1,6 +1,2 @@
-Tests: all-2 all-3 all-dbg-3
+Tests: all-3 all-dbg-3
 Depends: @
-
-Tests: all-dbg-2
-Depends: @
-Restrictions: allow-stderr

@@ -1,12 +1,17 @@
-``zope.interface``
-==================
+====================
+ ``zope.interface``
+====================
 
 .. image:: https://img.shields.io/pypi/v/zope.interface.svg
     :target: https://pypi.python.org/pypi/zope.interface/
     :alt: Latest Version
 
-.. image:: https://travis-ci.org/zopefoundation/zope.interface.png?branch=master
-        :target: https://travis-ci.org/zopefoundation/zope.interface
+.. image:: https://img.shields.io/pypi/pyversions/zope.interface.svg
+        :target: https://pypi.org/project/zope.interface/
+        :alt: Supported Python versions
+
+.. image:: https://travis-ci.com/zopefoundation/zope.interface.svg?branch=master
+        :target: https://travis-ci.com/zopefoundation/zope.interface
 
 .. image:: https://readthedocs.org/projects/zopeinterface/badge/?version=latest
         :target: https://zopeinterface.readthedocs.io/en/latest/
@@ -14,7 +19,7 @@
 
 This package is intended to be independently reusable in any Python
 project. It is maintained by the `Zope Toolkit project
-<http://docs.zope.org/zopetoolkit/>`_.
+<https://zopetoolkit.readthedocs.io/>`_.
 
 This package provides an implementation of "object interfaces" for Python.
 Interfaces are a mechanism for labeling objects as conforming to a given
