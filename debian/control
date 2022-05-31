@@ -28,7 +28,7 @@ Testsuite: autopkgtest
 Homepage: http://pypi.python.org/pypi/zope.interface
 Vcs-Svn: svn://anonscm.debian.org/pkg-zope/zope.interface/trunk
 Vcs-Browser: http://svn.debian.org/viewsvn/pkg-zope/zope.interface/trunk
-XS-Pexip-Upstream: http://ftp.debian.org/debian/ buster
+XS-Pexip-Upstream: http://deb.debian.org/debian/ bullseye
 
 Package: python-zope.interface
 Architecture: any
