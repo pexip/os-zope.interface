@@ -1,6 +1,7 @@
 include *.rst
 include *.txt
 include *.py
+include *.sh
 include .coveragerc
 include build.cmd
 include buildout.cfg
@@ -17,3 +18,4 @@ global-exclude coverage.xml
 global-exclude appveyor.yml
 
 prune docs/_build
+prune benchmarks

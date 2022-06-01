@@ -1,8 +1,7 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: zope.interface
 Upstream-Contact: Zope Foundation and Contributors <zope-dev@zope.org>
 Source: http://pypi.python.org/pypi/zope.interface
-Files-Excluded: docs/_build/*
 
 Files: *
 Copyright: (c) 2001-2010 Zope Foundation and Contributors.
