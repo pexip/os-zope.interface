@@ -2,6 +2,108 @@
  Changes
 =========
 
+5.5.2 (2022-11-17)
+==================
+
+- Add support for building arm64 wheels on macOS.
+
+
+5.5.1 (2022-11-03)
+==================
+
+- Add support for final Python 3.11 release.
+
+
+5.5.0 (2022-10-10)
+==================
+
+- Add support for Python 3.10 and 3.11 (as of 3.11.0rc2).
+
+- Add missing Trove classifier showing support for Python 3.9.
+
+- Add some more entries to ``zope.interface.interfaces.__all__``.
+
+- Disable unsafe math optimizations in C code.  See `pull request 262
+  <https://github.com/zopefoundation/zope.interface/pull/262>`_.
+
+
+5.4.0 (2021-04-15)
+==================
+
+- Make the C implementation of the ``__providedBy__`` descriptor stop
+  ignoring all errors raised when accessing the instance's
+  ``__provides__``. Now it behaves like the Python version and only
+  catches ``AttributeError``. The previous behaviour could lead to
+  crashing the interpreter in cases of recursion and errors. See
+  `issue 239 <https://github.com/zopefoundation/zope.interface/issues>`_.
+
+- Update the ``repr()`` and ``str()`` of various objects to be shorter
+  and more informative. In many cases, the ``repr()`` is now something
+  that can be evaluated to produce an equal object. For example, what
+  was previously printed as ``<implementedBy builtins.list>`` is now
+  shown as ``classImplements(list, IMutableSequence, IIterable)``. See
+  `issue 236 <https://github.com/zopefoundation/zope.interface/issues/236>`_.
+
+- Make ``Declaration.__add__`` (as in ``implementedBy(Cls) +
+  ISomething``) try harder to preserve a consistent resolution order
+  when the two arguments share overlapping pieces of the interface
+  inheritance hierarchy. Previously, the right hand side was always
+  put at the end of the resolution order, which could easily produce
+  invalid orders. See `issue 193
+  <https://github.com/zopefoundation/zope.interface/issues/193>`_.
+
+5.3.0 (2020-03-21)
+==================
+
+- No changes from 5.3.0a1
+
+
+5.3.0a1 (2021-03-18)
+====================
+
+- Improve the repr of ``zope.interface.Provides`` to remove ambiguity
+  about what is being provided. This is especially helpful diagnosing
+  IRO issues.
+
+- Allow subclasses of ``BaseAdapterRegistry`` (including
+  ``AdapterRegistry`` and ``VerifyingAdapterRegistry``) to have
+  control over the data structures. This allows persistent
+  implementations such as those based on ZODB to choose more scalable
+  options (e.g., BTrees instead of dicts). See `issue 224
+  <https://github.com/zopefoundation/zope.interface/issues/224>`_.
+
+- Fix a reference counting issue in ``BaseAdapterRegistry`` that could
+  lead to references to interfaces being kept around even when all
+  utilities/adapters/subscribers providing that interface have been
+  removed. This is mostly an issue for persistent implementations.
+  Note that this only corrects the issue moving forward, it does not
+  solve any already corrupted reference counts. See `issue 227
+  <https://github.com/zopefoundation/zope.interface/issues/227>`_.
+
+- Add the method ``BaseAdapterRegistry.rebuild()``. This can be used
+  to fix the reference counting issue mentioned above, as well as to
+  update the data structures when custom data types have changed.
+
+- Add the interface method ``IAdapterRegistry.subscribed()`` and
+  implementation ``BaseAdapterRegistry.subscribed()`` for querying
+  directly registered subscribers. See `issue 230
+  <https://github.com/zopefoundation/zope.interface/issues/230>`_.
+
+- Add the maintenance method
+  ``Components.rebuildUtilityRegistryFromLocalCache()``. Most users
+  will not need this, but it can be useful if the ``Components.utilities``
+  registry is suspected to be out of sync with the ``Components``
+  object itself (this might happen to persistent ``Components``
+  implementations in the face of bugs).
+
+- Fix the ``Provides`` and ``ClassProvides`` descriptors to stop
+  allowing redundant interfaces (those already implemented by the
+  underlying class or meta class) to produce an inconsistent
+  resolution order. This is similar to the change in ``@implementer``
+  in 5.1.0, and resolves inconsistent resolution orders with
+  ``zope.proxy`` and ``zope.location``. See `issue 207
+  <https://github.com/zopefoundation/zope.interface/issues/207>`_.
+
 5.2.0 (2020-11-05)
 ==================
 
@@ -883,14 +985,14 @@ Bug Fixes
 3.2.0 (2006-01-05)
 ==================
 
-- Corresponds to the verison of the zope.interface package shipped as part of
+- Corresponds to the version of the zope.interface package shipped as part of
   the Zope 3.2.0 release.
 
 
 3.1.0 (2005-10-03)
 ==================
 
-- Corresponds to the verison of the zope.interface package shipped as part of
+- Corresponds to the version of the zope.interface package shipped as part of
   the Zope 3.1.0 release.
 
 - Made attribute resolution order consistent with component lookup order,
@@ -903,7 +1005,7 @@ Bug Fixes
 3.0.1 (2005-07-27)
 ==================
 
-- Corresponds to the verison of the zope.interface package shipped as part of
+- Corresponds to the version of the zope.interface package shipped as part of
   the Zope X3.0.1 release.
 
 - Fix a bug reported by James Knight, which caused adapter registries
@@ -913,5 +1015,5 @@ Bug Fixes
 3.0.0 (2004-11-07)
 ==================
 
-- Corresponds to the verison of the zope.interface package shipped as part of
+- Corresponds to the version of the zope.interface package shipped as part of
   the Zope X3.0.0 release.

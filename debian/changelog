@@ -1,3 +1,40 @@
+zope.interface (5.5.2-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * d/rules: Simplify, removing manual calls to setup.py.
+  * Run tests using pytest.
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 10 Dec 2022 21:45:21 +0000
+
+zope.interface (5.4.0-3) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on dpkg-dev.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 26 May 2022 18:12:38 +0100
+
+zope.interface (5.4.0-2) unstable; urgency=high
+
+  * Team upload.
+  * Drop manual -dbg package. (Closes: #994387)
+
+ -- Boyuan Yang <byang@debian.org>  Tue, 29 Mar 2022 21:17:23 -0400
+
+zope.interface (5.4.0-1) unstable; urgency=medium
+
+  * New upstream release 5.4.0
+  * d/watch: switch to GitHub tracking
+  * d/control:
+    - Change homepage for upstream to the actual one (GitHub)
+    - Bump Standards-Version to 4.6.0
+  * d/copyright:
+    - Change the homepage for upstream to the actual one (GitHub)
+    - Add debian/* copyright
+
+ -- Pierre-Elliott Bécue <peb@debian.org>  Tue, 05 Oct 2021 23:58:49 +0200
+
 zope.interface (5.2.0-1) unstable; urgency=medium
 
   [ Debian Janitor ]
