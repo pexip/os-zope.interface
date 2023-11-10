@@ -1,2 +1,2 @@
-Tests: all-3 all-dbg-3
+Tests: all-3
 Depends: @

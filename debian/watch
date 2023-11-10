@@ -1,3 +1,4 @@
 version=4
 opts=uversionmangle=s/(rc|a|b|c)/~$1/ \
-https://pypi.debian.net/zope.interface/zope.interface-(.+)\.(?:zip|tgz|tbz|txz|(?:tar\.(?:gz|bz2|xz)))
+https://github.com/zopefoundation/zope.interface/tags \
+    /zopefoundation/zope.interface/archive/refs/tags/@ANY_VERSION@\.tar\.gz

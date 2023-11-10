@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 export PYBUILD_NAME=zope.interface
+export PYBUILD_TEST_PYTEST=1
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 #export PYBUILD_VERBOSE=1
 #export DH_VERBOSE=1
@@ -10,62 +11,17 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 package3=python3-zope.interface
 
-include /usr/share/dpkg/architecture.mk
-ifneq ($(DEB_BUILD_MULTIARCH),$(DEB_HOST_MULTIARCH))
-  SET_CROSS_ENV = PYTHONPATH=/usr/lib/python$$pv/plat-$(DEB_HOST_MULTIARCH)
-
-  # FIXME: is this sufficient?
-  SET_CROSS_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_GNU_CPU)
-endif
-
-override_dh_auto_build:
-	set -xe; for pv in $(shell py3versions -sv); do \
-		$(SET_CROSS_ENV) python$$pv setup.py build; \
-	done
-
-override_dh_auto_install:
-	set -xe; \
-	for pv in $(shell py3versions -vs); do \
-		$(SET_CROSS_ENV) python$$pv setup.py install --install-layout=deb \
-			--root $(CURDIR)/debian/$(package3); \
-	done
+execute_after_dh_auto_install:
 	# Remove C sources.
 	find debian/$(package3) -name '*.c' | xargs -r rm -f
 
-override_dh_install:
-	# remove C source
-	find debian/$(package3) -name '*.c' | xargs -r rm -f
-	# remove debug symbols
-	#-rm debian/$(package3)/usr/lib/python3/dist-packages/zope/interface/_zope_interface_coptimizations_d.so
-	# zope.interface provides the zope namespace __init__.py
-	for py in $(shell py3versions -vs); do \
-	    cp src/zope/__init__.py debian/$(package3)/usr/lib/python3/dist-packages/zope/; \
-	done
-	# python3-zope.interface-dbg package
-	for pv in $(shell py3versions -vs); do \
-	    $(SET_CROSS_ENV) python$$pv-dbg setup.py install \
-	    --no-compile --single-version-externally-managed \
-	    $(py_setup_install_args) --root=debian/$(package3)-dbg \
-	    --install-layout=deb; \
-	done
-	find debian/$(package3)-dbg
-	find debian/$(package3)-dbg ! -type d ! -name '*.so' | xargs rm -f
-	find debian/$(package3)-dbg -depth -empty -exec rmdir {} \;
-
-override_dh_installdocs:
-	dh_installdocs
-	dh_installdocs -p$(package3) README.rst
-	dh_installdocs -p$(package3)-dbg --link-doc=$(package3)
-
 override_dh_installchangelogs:
-	dh_installchangelogs
-	dh_installchangelogs -p$(package3) CHANGES.rst
+	dh_installchangelogs CHANGES.rst
 
 override_dh_strip:
-	dh_strip -p$(package3) --dbg-package=$(package3)-dbg
+	dh_strip --dbgsym-migration='python3-zope.interface-dbg (<< 5.4.0-2~)'
 
-override_dh_auto_clean:
-	dh_auto_clean
+execute_after_dh_auto_clean:
 	rm -f .eggs/README.txt
 	rm -f src/zope.interface.egg-info/requires.txt
 	rm -f src/zope/interface/_zope_interface_coptimizations.*.so

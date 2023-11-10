@@ -100,7 +100,7 @@ long_description = (
         )
 
 setup(name='zope.interface',
-      version='5.2.0',
+      version='5.5.2',
       url='https://github.com/zopefoundation/zope.interface',
       license='ZPL 2.1',
       description='Interfaces for Python',
@@ -120,6 +120,9 @@ setup(name='zope.interface',
           "Programming Language :: Python :: 3.6",
           "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
           "Programming Language :: Python :: Implementation :: CPython",
           "Programming Language :: Python :: Implementation :: PyPy",
           "Framework :: Zope :: 3",
