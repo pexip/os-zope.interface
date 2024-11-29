@@ -2,6 +2,137 @@
  Changes
 =========
 
+7.2 (2024-11-28)
+================
+
+- Add preliminary support for Python 3.14a2, this means that
+  ``.common.builtins.IByteString`` and ``.common.collections.IByteString`` are
+  no longer available from this Python version onwards as Python 3.14 dropped
+  ``collections.abc.ByteString``.
+
+
+7.1.1 (2024-10-23)
+==================
+
+- Fix segmentation faults in `weakrefobject.c` on Python 3.12 and 3.13.
+  (`#323 <https://github.com/zopefoundation/zope.interface/issues/323>`_)
+
+
+7.1.0 (2024-10-10)
+==================
+
+- Declare support for Python 3.13.
+
+- Fix segmentation faults on Python 3.13.
+  (`#323 <https://github.com/zopefoundation/zope.interface/issues/323>`_)
+
+
+7.0.3 (2024-08-27)
+==================
+
+- Fix `Assertion 'memb->type == T_PYSSIZET' failed.` for Python < 3.12.
+  (`#319 <https://github.com/zopefoundation/zope.interface/issues/319>`_)
+
+
+7.0.2 (2024-08-26)
+==================
+
+- Fix reference-counting bug in C module initialization (broken in 7.0).
+  (`#316 <https://github.com/zopefoundation/zope.interface/issues/316>`_)
+
+
+7.0.1 (2024-08-06)
+==================
+
+- Fix subclassability of ``ObjectSpecificationDescriptor`` (broken in 7.0).
+  (`#312 <https://github.com/zopefoundation/zope.interface/issues/312>`_)
+
+
+7.0 (2024-08-06)
+================
+
+- Enable heap-based types (PEP 384) for Python >= 3.11.
+
+- Adopt multi-phase module initialization (PEP 489).
+
+- Drop support for Python 3.7.
+
+
+6.4.post2 (2024-05-24)
+======================
+
+- Publish missing Windows wheels, second attempt.
+  (`#295 <https://github.com/zopefoundation/zope.interface/issues/295>`_)
+
+
+6.4.post1 (2024-05-23)
+======================
+
+- Publish missing Windows wheels.
+  (`#295 <https://github.com/zopefoundation/zope.interface/issues/295>`_)
+
+
+6.4.post0 (2024-05-22)
+======================
+
+- The sdist of version 6.4 was uploaded to PyPI as
+  ``zope_interface-6.4.tar.gz`` instead of ``zope.interface-6.4-py2.tar.gz``
+  which cannot be installed by ``zc.buildout``.  This release is a re-release
+  of version 6.4 with the correct sdist name.
+  (`#298 <https://github.com/zopefoundation/zope.interface/issues/298>`_)
+
+
+6.4 (2024-05-15)
+================
+
+- Adjust for incompatible changes in Python 3.13b1.
+  (`#292 <https://github.com/zopefoundation/zope.interface/issues/292>`_)
+
+- Build windows wheels on GHA.
+
+6.3 (2024-04-12)
+================
+
+- Add preliminary support for Python 3.13 as of 3.13a6.
+
+
+6.2 (2024-02-16)
+================
+
+- Add preliminary support for Python 3.13 as of 3.13a3.
+
+- Add support to use the pipe (``|``) syntax for ``typing.Union``.
+  (`#280 <https://github.com/zopefoundation/zope.interface/issues/280>`_)
+
+
+6.1 (2023-10-05)
+================
+
+- Build Linux binary wheels for Python 3.12.
+
+- Add support for Python 3.12.
+
+- Fix building of the docs for non-final versions.
+
+
+6.0 (2023-03-17)
+================
+
+- Build Linux binary wheels for Python 3.11.
+
+- Drop support for Python 2.7, 3.5, 3.6.
+
+- Fix test deprecation warning on Python 3.11.
+
+- Add preliminary support for Python 3.12 as of 3.12a5.
+
+- Drop:
+
+    + `zope.interface.implements`
+    + `zope.interface.implementsOnly`
+    + `zope.interface.classProvides`
+
+
 5.5.2 (2022-11-17)
 ==================
 

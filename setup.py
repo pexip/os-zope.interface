@@ -21,20 +21,24 @@
 
 import os
 import sys
-
 from distutils.errors import CCompilerError
 from distutils.errors import DistutilsExecError
 from distutils.errors import DistutilsPlatformError
 
-from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
+from setuptools import Extension
 from setuptools import find_packages
+from setuptools import setup
+from setuptools.command.build_ext import build_ext
+
+
+version = '7.2'
 
 
 class optional_build_ext(build_ext):
     """This class subclasses build_ext and allows
        the building of C extensions to fail.
     """
+
     def run(self):
         try:
             build_ext.run(self)
@@ -81,7 +85,7 @@ else:
 tests_require = [
     # The test dependencies should NOT have direct or transitive
     # dependencies on zope.interface.
-    'coverage >= 5.0.3',
+    'coverage[toml]',
     'zope.event',
     'zope.testing',
 ]
@@ -94,64 +98,54 @@ def read(*rnames):
 
 
 long_description = (
-        read('README.rst')
-        + '\n' +
-        read('CHANGES.rst')
-        )
+    read('README.rst') + '\n' + read('CHANGES.rst')
+)
 
-setup(name='zope.interface',
-      version='5.5.2',
-      url='https://github.com/zopefoundation/zope.interface',
-      license='ZPL 2.1',
-      description='Interfaces for Python',
-      author='Zope Foundation and Contributors',
-      author_email='zope-dev@zope.org',
-      long_description=long_description,
-      classifiers=[
-          "Development Status :: 5 - Production/Stable",
-          "Intended Audience :: Developers",
-          "License :: OSI Approved :: Zope Public License",
-          "Operating System :: OS Independent",
-          "Programming Language :: Python",
-          "Programming Language :: Python :: 2",
-          "Programming Language :: Python :: 2.7",
-          "Programming Language :: Python :: 3",
-          "Programming Language :: Python :: 3.5",
-          "Programming Language :: Python :: 3.6",
-          "Programming Language :: Python :: 3.7",
-          "Programming Language :: Python :: 3.8",
-          "Programming Language :: Python :: 3.9",
-          "Programming Language :: Python :: 3.10",
-          "Programming Language :: Python :: 3.11",
-          "Programming Language :: Python :: Implementation :: CPython",
-          "Programming Language :: Python :: Implementation :: PyPy",
-          "Framework :: Zope :: 3",
-          "Topic :: Software Development :: Libraries :: Python Modules",
-      ],
-      packages=find_packages('src'),
-      package_dir={'': 'src'},
-      namespace_packages=["zope"],
-      cmdclass={
-          'build_ext': optional_build_ext,
-      },
-      test_suite='zope.interface.tests',
-      include_package_data=True,
-      zip_safe=False,
-      tests_require=tests_require,
-      install_requires=['setuptools'],
-      python_requires=', '.join([
-          '>=2.7',
-          '!=3.0.*',
-          '!=3.1.*',
-          '!=3.2.*',
-          '!=3.3.*',
-          '!=3.4.*',
-      ]),
-      extras_require={
-          'docs': ['Sphinx', 'repoze.sphinx.autointerface'],
-          'test': tests_require,
-          'testing': testing_extras,
-      },
-      ext_modules=ext_modules,
-      keywords=['interface', 'components', 'plugins'],
+setup(
+    name='zope.interface',
+    version=version,
+    url='https://github.com/zopefoundation/zope.interface',
+    license='ZPL 2.1',
+    description='Interfaces for Python',
+    author='Zope Foundation and Contributors',
+    author_email='zope-dev@zope.dev',
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Zope Public License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Framework :: Zope :: 3",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
+    namespace_packages=["zope"],
+    cmdclass={
+        'build_ext': optional_build_ext,
+    },
+    include_package_data=True,
+    zip_safe=False,
+    install_requires=['setuptools'],
+    python_requires='>=3.8',
+    extras_require={
+        'docs': ['Sphinx',
+                 'repoze.sphinx.autointerface',
+                 'furo'],
+        'test': tests_require,
+        'testing': testing_extras,
+    },
+    ext_modules=ext_modules,
+    keywords=['interface', 'components', 'plugins'],
 )

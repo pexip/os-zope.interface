@@ -1,3 +1,78 @@
+zope.interface (7.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 29 Nov 2024 12:58:39 +0000
+
+zope.interface (7.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 25 Oct 2024 10:44:29 +0100
+
+zope.interface (7.1.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Standards-Version: 4.7.0.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 14 Oct 2024 11:11:42 +0100
+
+zope.interface (7.0.3-2) unstable; urgency=medium
+
+  * Cherry-pick upstream patch to fix segmentation faults on Python 3.13
+    (closes: #1081541).
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 09 Oct 2024 11:20:49 +0100
+
+zope.interface (7.0.3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 27 Aug 2024 21:07:42 +0100
+
+zope.interface (7.0.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 26 Aug 2024 18:25:08 +0100
+
+zope.interface (6.4-2) unstable; urgency=medium
+
+  * Use pybuild-plugin-pyproject.
+  * Enable autopkgtest-pkg-pybuild.
+  * Add myself to Uploaders.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 26 Aug 2024 16:13:38 +0100
+
+zope.interface (6.4-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 17 May 2024 11:35:41 +0100
+
+zope.interface (6.3-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 13 May 2024 12:13:20 +0100
+
+zope.interface (6.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * Ship a pydist file to help dh_python3 locate python3-zope.interface, when
+    the package name is normalized.
+
+ -- Stefano Rivera <stefanor@debian.org>  Sun, 24 Dec 2023 15:54:23 -0400
+
+zope.interface (6.1-0.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream version, ready for Python 3.12.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 07 Nov 2023 08:19:54 +0100
+
 zope.interface (5.5.2-1) unstable; urgency=medium
 
   * Team upload.

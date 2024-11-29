@@ -2,21 +2,23 @@ Source: zope.interface
 Section: zope
 Priority: optional
 Maintainer: Debian Python Team <team+python@tracker.debian.org>
-Uploaders: Pierre-Elliott Bécue <peb@debian.org>
+Uploaders: Pierre-Elliott Bécue <peb@debian.org>, Colin Watson <cjwatson@debian.org>
 Build-Depends: debhelper-compat (= 13),
                dh-python,
                libpython3-all-dev,
+               pybuild-plugin-pyproject,
                python3-all-dev:any,
-               python3-coverage (>= 5.0.3),
+               python3-coverage,
                python3-pytest,
                python3-setuptools,
                python3-zope.event,
                python3-zope.testing
-Standards-Version: 4.6.0
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
 Homepage: https://github.com/zopefoundation/zope.interface
 Vcs-Browser: https://salsa.debian.org/python-team/packages/zope.interface
 Vcs-Git: https://salsa.debian.org/python-team/packages/zope.interface.git
+Testsuite: autopkgtest-pkg-pybuild
 
 Package: python3-zope.interface
 Architecture: any
