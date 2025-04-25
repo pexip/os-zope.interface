@@ -2,43 +2,50 @@
 # https://github.com/zopefoundation/meta/tree/master/config/c-code
 [meta]
 template = "c-code"
-commit-id = "342271a70d886e753e5cc629e8a81b3cfab692ac"
+commit-id = "baf6089f"
 
 [python]
-with-appveyor = true
 with-pypy = true
-with-legacy-python = true
 with-sphinx-doctests = true
-with-windows = false
-with-future-python = false
+with-windows = true
+with-future-python = true
 with-docs = true
 with-macos = false
 
 [tox]
-use-flake8 = false
+use-flake8 = true
 testenv-commands = [
+    "pip install -U -e .[test]",
     "coverage run -p -m unittest discover -s src {posargs}",
-    ]
-testenv-deps = [
     ]
 testenv-setenv = [
     "ZOPE_INTERFACE_STRICT_IRO=1",
     ]
 coverage-command = "coverage combine"
 coverage-additional = [
-    "depends = py27,py27-pure,py35,py35-pure,py36,py36-pure,py37,py37-pure,py38,py38-pure,py39,py39-pure,py310,py310-pure,pypy,pypy3,docs",
+    "depends = py38,py38-pure,py39,py39-pure,py310,py310-pure,py311,py311-pure,py312,py312-pure,py313,py313-pure,pypy3,docs",
     "parallel_show_output = true",
     ]
 
+[flake8]
+additional-config = [
+    "ignore =",
+    "    # module level import not at top of file:  we are avoiding cycles",
+    "    E402,",
+    "    # import not used:  we are publishing APIs, at least from __init__.py",
+    "    F401,",
+    "    # line break after binary operator",
+    "    W504",
+    ]
+
 [coverage]
-fail-under = 99
+fail-under = 98
 
 [manifest]
 additional-rules = [
+    "include *.yaml",
     "include *.cmd",
     "include *.sh",
-    "include *.yml",
-    "include .coveragerc",
     "recursive-include benchmarks *.py",
     "recursive-include docs *.bat",
     "recursive-include docs *.py",
@@ -62,33 +69,23 @@ additional-install = [
     "  # works fine with non-editable installs.)",
     "  run: |",
     "    pip install -U wheel",
-    "    pip install -U --no-binary :all: coverage",
-    "    pip install -U 'faulthandler; python_version == \"2.7\" and platform_python_implementation == \"CPython\"'",
+    "    pip install -U --no-binary :all: coverage[toml]",
     "    # Unzip into src/ so that testrunner can find the .so files",
     "    # when we ask it to load tests from that directory. This",
     "    # might also save some build time?",
     "    unzip -n dist/zope.interface-*whl -d src",
     "    pip install -U -e .[test]",
-    "- name: Run tests and report coverage",
-    "  # Once with C extensions, once without. Yes, this runs them",
-    "  # twice on PyPy.",
+    "- name: Run tests with C extensions",
+    "  if: ${{ !startsWith(matrix.python-version, 'pypy') }}",
     "  run: |",
     "    coverage run -p -m unittest discover -s src",
-    "    PURE_PYTHON=1 coverage run -p -m unittest discover -s src",
+    "- name: Run tests without C extensions",
+    "  run: |",
+    "    coverage run -p -m unittest discover -s src",
+    "  env:",
+    "    PURE_PYTHON: 1",
+    "- name: Report Coverage",
+    "  run: |",
     "    coverage combine",
     "    coverage report --ignore-errors --show-missing",
-    ]
-
-[appveyor]
-global-env-vars = [
-    "# Currently the builds use @mgedmin's Appveyor account.  The PyPI token",
-    "# belongs to zope.wheelbuilder, which is managed by @mgedmin and @dataflake.",
-    "",
-    "global:",
-    "  TWINE_USERNAME: __token__",
-    "  TWINE_PASSWORD:",
-    "    secure: aoZC/+rvJKg8B5GMGIxd1X2q2bz7SMl8G3810BID9U8PXFqM0FbWaK9fZ9qcU0UyG2xJsK56Fb6+L6g27I0Lg8UFNhlU1zLAuMSgJQbHsqawFgSY067IdJB68pp34d/oEyxMrJvAKENHH77Fe4KGDssLlk5WnnYS3DA9b66p5imP+1DTtkq5/gMtoG4nZTBtVos7J2kkYTQ5t4BjzTQxPMC3bStNnvuuB0orX4AoCyTrOR1wdZFiNKLzbVnrJCNn24t/n3kG9WrxbnKlrbOm4A==",
-    ]
-test-steps = [
-    "- python -m unittest discover -s src",
     ]
