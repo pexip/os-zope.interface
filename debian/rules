@@ -2,6 +2,10 @@
 
 export PYBUILD_NAME=zope.interface
 export PYBUILD_TEST_PYTEST=1
+export PYBUILD_TEST_ARGS = -o consider_namespace_packages=true
+ifeq ($(PYBUILD_AUTOPKGTEST),1)
+PYBUILD_TEST_ARGS += /usr/lib/python3/dist-packages/zope/interface/tests
+endif
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 #export PYBUILD_VERBOSE=1
 #export DH_VERBOSE=1

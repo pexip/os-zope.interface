@@ -9,7 +9,7 @@
 # Original comment follows.
 ###
 ###
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# This workflow will install Python dependencies, run tests with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 ###
 
@@ -81,7 +81,7 @@ jobs:
   # other people to test/debug), the strategy is to divide the process
   # into several different jobs. The first builds and saves the binary
   # wheels. It has dependent jobs that download and install the wheel
-  # to run tests, build docs, and perform linting. Building the
+  # to run tests, and build docs. Building the
   # manylinux wheels is an independent set of jobs.
   #
   # This division is time-saving for projects that take awhile to
@@ -96,72 +96,78 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - "2.7"
-          - "3.5"
-          - "pypy-2.7"
-          - "pypy-3.7"
-          - "3.6"
-          - "3.7"
+          - "pypy-3.10"
           - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
-        os: [ubuntu-20.04, macos-latest]
+          - "3.12"
+          - "3.13"
+          - "3.14"
+        os: [ubuntu-latest, macos-latest, windows-latest]
         exclude:
           - os: macos-latest
-            python-version: "pypy-2.7"
-          - os: macos-latest
-            python-version: "pypy-3.7"
-          - os: macos-latest
-            python-version: "3.5"
+            python-version: "pypy-3.10"
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       ###
       # Caching.
       # This actually *restores* a cache and schedules a cleanup action
       # to save the cache. So it must come before the thing we want to use
       # the cache.
       ###
-      - name: Get pip cache dir
-        id: pip-cache
+      - name: Get pip cache dir (default)
+        id: pip-cache-default
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         run: |
           echo "dir=$(pip cache dir)" >>$GITHUB_OUTPUT
 
-      - name: pip cache
-        uses: actions/cache@v3
+      - name: Get pip cache dir (Windows)
+        id: pip-cache-windows
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        run: |
+          echo "dir=$(pip cache dir)" >> $Env:GITHUB_OUTPUT
+
+      - name: pip cache (default)
+        uses: actions/cache@v4
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.pip-cache-default.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install Build Dependencies (PyPy2)
-        if: >
-          startsWith(matrix.python-version, 'pypy-2.7')
-        run: |
-          pip install -U pip
-          pip install -U setuptools wheel twine "cffi != 1.15.1"
-      - name: Install Build Dependencies (other Python versions)
-        if: >
-          !startsWith(matrix.python-version, 'pypy-2.7')
-        run: |
-          pip install -U pip
-          pip install -U setuptools wheel twine cffi
+      - name: pip cache (Windows)
+        uses: actions/cache@v4
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        with:
+          path: ${{ steps.pip-cache-windows.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Build zope.interface (macOS x86_64, Python 3.8+)
+      - name: Install Build Dependencies (3.14)
+        if: matrix.python-version == '3.14'
+        run: |
+          pip install -U pip
+          pip install -U "setuptools < 74" wheel twine
+      - name: Install Build Dependencies
+        if: matrix.python-version != '3.14'
+        run: |
+          pip install -U pip
+          pip install -U "setuptools < 74" wheel twine
+
+      - name: Build zope.interface (macOS x86_64)
         if: >
           startsWith(runner.os, 'Mac')
-          && !(startsWith(matrix.python-version, 'pypy')
-               || matrix.python-version == '2.7'
-               || matrix.python-version == '3.5'
-               || matrix.python-version == '3.6'
-               || matrix.python-version == '3.7')
+          && !startsWith(matrix.python-version, 'pypy')
         env:
           MACOSX_DEPLOYMENT_TARGET: 10.9
           _PYTHON_HOST_PLATFORM: macosx-10.9-x86_64
@@ -171,14 +177,10 @@ jobs:
           # output (pip install uses a random temporary directory, making this difficult).
           python setup.py build_ext -i
           python setup.py bdist_wheel
-      - name: Build zope.interface (macOS arm64, Python 3.8+)
+      - name: Build zope.interface (macOS arm64)
         if: >
           startsWith(runner.os, 'Mac')
-          && !(startsWith(matrix.python-version, 'pypy')
-               || matrix.python-version == '2.7'
-               || matrix.python-version == '3.5'
-               || matrix.python-version == '3.6'
-               || matrix.python-version == '3.7')
+          && !startsWith(matrix.python-version, 'pypy')
         env:
           MACOSX_DEPLOYMENT_TARGET: 11.0
           _PYTHON_HOST_PLATFORM: macosx-11.0-arm64
@@ -192,20 +194,23 @@ jobs:
         if: >
           !startsWith(runner.os, 'Mac')
           || startsWith(matrix.python-version, 'pypy')
-          || matrix.python-version == '2.7'
-          || matrix.python-version == '3.5'
-          || matrix.python-version == '3.6'
-          || matrix.python-version == '3.7'
         run: |
           # Next, build the wheel *in place*. This helps ccache, and also lets us cache the configure
           # output (pip install uses a random temporary directory, making this difficult).
           python setup.py build_ext -i
           python setup.py bdist_wheel
 
-      - name: Install zope.interface and dependencies
+      - name: Install zope.interface and dependencies (3.14)
+        if: matrix.python-version == '3.14'
         run: |
           # Install to collect dependencies into the (pip) cache.
-          pip install -U 'faulthandler; python_version == "2.7" and platform_python_implementation == "CPython"'
+          # Use "--pre" here because dependencies with support for this future
+          # Python release may only be available as pre-releases
+          pip install --pre .[test]
+      - name: Install zope.interface and dependencies
+        if: matrix.python-version != '3.14'
+        run: |
+          # Install to collect dependencies into the (pip) cache.
           pip install .[test]
 
       - name: Check zope.interface build
@@ -215,41 +220,38 @@ jobs:
       - name: Upload zope.interface wheel (macOS x86_64)
         if: >
           startsWith(runner.os, 'Mac')
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}.whl
+          # The x86_64 wheel is uploaded with a different name just so it can be
+          # manually downloaded when desired. The wheel itself *cannot* be tested
+          # on the GHA runner, which uses arm64 architecture.
+          name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}-x86_64.whl
           path: dist/*x86_64.whl
       - name: Upload zope.interface wheel (macOS arm64)
         if: >
           startsWith(runner.os, 'Mac')
-          && !(startsWith(matrix.python-version, 'pypy')
-               || matrix.python-version == '2.7'
-               || matrix.python-version == '3.5'
-               || matrix.python-version == '3.6'
-               || matrix.python-version == '3.7')
-        uses: actions/upload-artifact@v3
+          && !startsWith(matrix.python-version, 'pypy')
+        uses: actions/upload-artifact@v4
         with:
-          # The arm64 wheel is uploaded with a different name just so it can be
-          # manually downloaded when desired. The wheel itself *cannot* be tested
-          # on the GHA runner, which uses x86_64 architecture.
-          name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}-arm64.whl
+          name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}.whl
           path: dist/*arm64.whl
       - name: Upload zope.interface wheel (all other platforms)
         if: >
           !startsWith(runner.os, 'Mac')
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}.whl
           path: dist/*whl
-      - name: Publish package to PyPI (mac)
-        # We cannot 'uses: pypa/gh-action-pypi-publish@v1.4.1' because
-        # that's apparently a container action, and those don't run on
-        # the Mac.
+      - name: Publish package to PyPI (Non-Linux)
+        # We cannot use pypa/gh-action-pypi-publish because that
+        # is a container action, and those don't run on macOS
+        # or Windows GHA runners.
         if: >
           github.event_name == 'push'
           && startsWith(github.ref, 'refs/tags')
-          && startsWith(runner.os, 'Mac')
+          && !startsWith(runner.os, 'Linux')
           && !startsWith(matrix.python-version, 'pypy')
+          && !startsWith(matrix.python-version, '3.14')
         env:
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         run: |
@@ -262,53 +264,65 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - "2.7"
-          - "3.5"
-          - "pypy-2.7"
-          - "pypy-3.7"
-          - "3.6"
-          - "3.7"
+          - "pypy-3.10"
           - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
-        os: [ubuntu-20.04, macos-latest]
+          - "3.12"
+          - "3.13"
+          - "3.14"
+        os: [ubuntu-latest, macos-latest, windows-latest]
         exclude:
           - os: macos-latest
-            python-version: "pypy-2.7"
-          - os: macos-latest
-            python-version: "pypy-3.7"
-          - os: macos-latest
-            python-version: "3.5"
+            python-version: "pypy-3.10"
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       ###
       # Caching.
       # This actually *restores* a cache and schedules a cleanup action
       # to save the cache. So it must come before the thing we want to use
       # the cache.
       ###
-      - name: Get pip cache dir
-        id: pip-cache
+      - name: Get pip cache dir (default)
+        id: pip-cache-default
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         run: |
           echo "dir=$(pip cache dir)" >>$GITHUB_OUTPUT
 
-      - name: pip cache
-        uses: actions/cache@v3
+      - name: Get pip cache dir (Windows)
+        id: pip-cache-windows
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        run: |
+          echo "dir=$(pip cache dir)" >> $Env:GITHUB_OUTPUT
+
+      - name: pip cache (default)
+        uses: actions/cache@v4
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.pip-cache-default.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: pip cache (Windows)
+        uses: actions/cache@v4
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        with:
+          path: ${{ steps.pip-cache-windows.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
       - name: Download zope.interface wheel
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}.whl
           path: dist/
@@ -319,19 +333,23 @@ jobs:
         # works fine with non-editable installs.)
         run: |
           pip install -U wheel
-          pip install -U --no-binary :all: coverage
-          pip install -U 'faulthandler; python_version == "2.7" and platform_python_implementation == "CPython"'
+          pip install -U --no-binary :all: coverage[toml]
           # Unzip into src/ so that testrunner can find the .so files
           # when we ask it to load tests from that directory. This
           # might also save some build time?
           unzip -n dist/zope.interface-*whl -d src
           pip install -U -e .[test]
-      - name: Run tests and report coverage
-        # Once with C extensions, once without. Yes, this runs them
-        # twice on PyPy.
+      - name: Run tests with C extensions
+        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
         run: |
           coverage run -p -m unittest discover -s src
-          PURE_PYTHON=1 coverage run -p -m unittest discover -s src
+      - name: Run tests without C extensions
+        run: |
+          coverage run -p -m unittest discover -s src
+        env:
+          PURE_PYTHON: 1
+      - name: Report Coverage
+        run: |
           coverage combine
           coverage report --ignore-errors --show-missing
       - name: Submit to Coveralls
@@ -343,7 +361,7 @@ jobs:
 
   coveralls_finish:
     needs: test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - name: Coveralls Finished
       uses: AndreMiras/coveralls-python-action@develop
@@ -355,44 +373,62 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9"]
-        os: [ubuntu-20.04]
+        python-version: ["3.11"]
+        os: [ubuntu-latest]
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       ###
       # Caching.
       # This actually *restores* a cache and schedules a cleanup action
       # to save the cache. So it must come before the thing we want to use
       # the cache.
       ###
-      - name: Get pip cache dir
-        id: pip-cache
+      - name: Get pip cache dir (default)
+        id: pip-cache-default
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         run: |
           echo "dir=$(pip cache dir)" >>$GITHUB_OUTPUT
 
-      - name: pip cache
-        uses: actions/cache@v3
+      - name: Get pip cache dir (Windows)
+        id: pip-cache-windows
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        run: |
+          echo "dir=$(pip cache dir)" >> $Env:GITHUB_OUTPUT
+
+      - name: pip cache (default)
+        uses: actions/cache@v4
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.pip-cache-default.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: pip cache (Windows)
+        uses: actions/cache@v4
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        with:
+          path: ${{ steps.pip-cache-windows.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
       - name: Download zope.interface wheel
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}.whl
           path: dist/
       - name: Install zope.interface
         run: |
           pip install -U wheel
-          pip install -U coverage
+          pip install -U coverage[toml]
           pip install -U  "`ls dist/zope.interface-*.whl`[docs]"
       - name: Build docs
         env:
@@ -401,89 +437,55 @@ jobs:
           sphinx-build -b html -d docs/_build/doctrees docs docs/_build/html
           sphinx-build -b doctest -d docs/_build/doctrees docs docs/_build/doctest
 
-  lint:
-    needs: build-package
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        python-version: ["3.9"]
-        os: [ubuntu-20.04]
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      ###
-      # Caching.
-      # This actually *restores* a cache and schedules a cleanup action
-      # to save the cache. So it must come before the thing we want to use
-      # the cache.
-      ###
-      - name: Get pip cache dir
-        id: pip-cache
-        run: |
-          echo "dir=$(pip cache dir)" >>$GITHUB_OUTPUT
-
-      - name: pip cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Download zope.interface wheel
-        uses: actions/download-artifact@v3
-        with:
-          name: zope.interface-${{ runner.os }}-${{ matrix.python-version }}.whl
-          path: dist/
-      - name: Install zope.interface
-        run: |
-          pip install -U pip
-          pip install -U wheel
-          pip install -U `ls dist/zope.interface-*`[test]
-      - name: Lint
-        # We only need to do this on one version, and it should be Python 3, because
-        # pylint has stopped updating for Python 2.
-        # TODO: Pick a linter and configuration and make this step right.
-        run: |
-          pip install -U pylint
-          # python -m pylint --limit-inference-results=1 --rcfile=.pylintrc zope.interface -f parseable -r n
-
   manylinux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     # We use a regular Python matrix entry to share as much code as possible.
     strategy:
       matrix:
-        python-version: ["3.9"]
-        image: [manylinux2010_x86_64, manylinux2010_i686, manylinux2014_aarch64]
+        python-version: ["3.11"]
+        image: [manylinux2014_x86_64, manylinux2014_i686, manylinux2014_aarch64]
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       ###
       # Caching.
       # This actually *restores* a cache and schedules a cleanup action
       # to save the cache. So it must come before the thing we want to use
       # the cache.
       ###
-      - name: Get pip cache dir
-        id: pip-cache
+      - name: Get pip cache dir (default)
+        id: pip-cache-default
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         run: |
           echo "dir=$(pip cache dir)" >>$GITHUB_OUTPUT
 
-      - name: pip cache
-        uses: actions/cache@v3
+      - name: Get pip cache dir (Windows)
+        id: pip-cache-windows
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        run: |
+          echo "dir=$(pip cache dir)" >> $Env:GITHUB_OUTPUT
+
+      - name: pip cache (default)
+        uses: actions/cache@v4
+        if: ${{ !startsWith(runner.os, 'Windows') }}
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.pip-cache-default.outputs.dir }}
+          key: ${{ runner.os }}-pip_manylinux-${{ matrix.image }}-${{ matrix.python-version }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: pip cache (Windows)
+        uses: actions/cache@v4
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        with:
+          path: ${{ steps.pip-cache-windows.outputs.dir }}
           key: ${{ runner.os }}-pip_manylinux-${{ matrix.image }}-${{ matrix.python-version }}
           restore-keys: |
             ${{ runner.os }}-pip-
@@ -491,18 +493,16 @@ jobs:
       - name: Update pip
         run: pip install -U pip
       - name: Build zope.interface (x86_64)
-        if: matrix.image == 'manylinux2010_x86_64'
+        if: matrix.image == 'manylinux2014_x86_64'
         # An alternate way to do this is to run the container directly with a uses:
         # and then the script runs inside it. That may work better with caching.
         # See https://github.com/pyca/bcrypt/blob/f6b5ee2eda76d077c531362ac65e16f045cf1f29/.github/workflows/wheel-builder.yml
-        # The 2010 image is the most recent spec that comes with Python 2.7,
-        # and only up through the tag 2021-02-06-3d322a5
         env:
           DOCKER_IMAGE: quay.io/pypa/${{ matrix.image }}
         run: |
           bash .manylinux.sh
       - name: Build zope.interface (i686)
-        if: matrix.image == 'manylinux2010_i686'
+        if: matrix.image == 'manylinux2014_i686'
         env:
           DOCKER_IMAGE: quay.io/pypa/${{ matrix.image }}
           PRE_CMD: linux32
@@ -518,12 +518,14 @@ jobs:
           bash .manylinux.sh
 
       - name: Upload zope.interface wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: wheelhouse/*whl
           name: manylinux_${{ matrix.image }}_wheels.zip
       - name: Restore pip cache permissions
-        run: sudo chown -R $(whoami) ${{ steps.pip-cache.outputs.dir }}
+        run: sudo chown -R $(whoami) ${{ steps.pip-cache-default.outputs.dir }}
+      - name: Prevent publishing wheels for unreleased Python versions
+        run: VER=$(echo '3.14' | tr -d .) && ls -al wheelhouse && sudo rm -f wheelhouse/*-cp${VER}*.whl && ls -al wheelhouse
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         if: >
@@ -532,5 +534,5 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TWINE_PASSWORD }}
-          skip_existing: true
-          packages_dir: wheelhouse/
+          skip-existing: true
+          packages-dir: wheelhouse/

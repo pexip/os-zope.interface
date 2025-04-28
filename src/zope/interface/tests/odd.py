@@ -55,16 +55,13 @@ This is used for testing support for ExtensionClass in new interfaces.
   >>> C.c = 1
   >>> c.c
   1
-  >>> import sys
-  >>> if sys.version[0] == '2': # This test only makes sense under Python 2.x
-  ...     from types import ClassType
-  ...     assert not isinstance(C, (type, ClassType))
 
   >>> int(C.__class__.__class__ is C.__class__)
   1
 """
 
 # class OddClass is an odd meta class
+
 
 class MetaMetaClass(type):
 
@@ -75,7 +72,7 @@ class MetaMetaClass(type):
         return type.__getattribute__(cls, name)
 
 
-class MetaClass(object):
+class MetaClass:
     """Odd classes
     """
 
@@ -94,16 +91,21 @@ class MetaClass(object):
                 return v
         raise AttributeError(name)
 
-    def __repr__(self): # pragma: no cover
-        return "<odd class %s at %s>" % (self.__name__, hex(id(self)))
+    def __repr__(self):  # pragma: no cover
+        return f"<odd class {self.__name__} at {hex(id(self))}>"
 
 
-MetaClass = MetaMetaClass('MetaClass',
-                          MetaClass.__bases__,
-                          {k: v for k, v in MetaClass.__dict__.items()
-                          if k not in ('__dict__',)})
+MetaClass = MetaMetaClass(
+    'MetaClass',
+    MetaClass.__bases__,
+    {
+        k: v for k, v in MetaClass.__dict__.items()
+        if k not in ('__dict__',)
+    }
+)
 
-class OddInstance(object):
+
+class OddInstance:
 
     def __init__(self, cls):
         self.__dict__['__class__'] = cls
@@ -123,6 +125,6 @@ class OddInstance(object):
     def __delattr__(self, name):
         raise NotImplementedError()
 
-    def __repr__(self): # pragma: no cover
-        return "<odd %s instance at %s>" % (
+    def __repr__(self):  # pragma: no cover
+        return "<odd {} instance at {}>".format(
             self.__class__.__name__, hex(id(self)))

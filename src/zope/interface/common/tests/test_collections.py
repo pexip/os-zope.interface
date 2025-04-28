@@ -12,33 +12,22 @@
 
 
 import array
+import sys
 import unittest
-try:
-    import collections.abc as abc
-except ImportError:
-    import collections as abc
-from collections import deque
 from collections import OrderedDict
-
-
-try:
-    from types import MappingProxyType
-except ImportError:
-    MappingProxyType = object()
+from collections import abc
+from collections import deque
+from types import MappingProxyType
 
 from zope.interface import Invalid
-
-
+from zope.interface._compat import PYPY
 # Note that importing z.i.c.collections does work on import.
 from zope.interface.common import collections
 
-
-from zope.interface._compat import PYPY
-from zope.interface._compat import PYTHON2 as PY2
-
-from . import add_abc_interface_tests
 from . import VerifyClassMixin
 from . import VerifyObjectMixin
+from . import add_abc_interface_tests
+
 
 class TestVerifyClass(VerifyClassMixin, unittest.TestCase):
 
@@ -65,34 +54,24 @@ class TestVerifyClass(VerifyClassMixin, unittest.TestCase):
         self.assertTrue(self.verify(collections.ISequence,
                                     collections.UserString))
 
-    def test_non_iterable_UserDict(self):
-        try:
-            from UserDict import UserDict as NonIterableUserDict # pylint:disable=import-error
-        except ImportError:
-            # Python 3
-            self.skipTest("No UserDict.NonIterableUserDict on Python 3")
-
-        with self.assertRaises(Invalid):
-            self.verify(collections.IMutableMapping, NonIterableUserDict)
-
-    # Now we go through the registry, which should have several things,
-    # mostly builtins, but if we've imported other libraries already,
-    # it could contain things from outside of there too. We aren't concerned
-    # about third-party code here, just standard library types. We start with a
-    # blacklist of things to exclude, but if that gets out of hand we can figure
-    # out a better whitelisting.
+    # Now we go through the registry, which should have several things, mostly
+    # builtins, but if we've imported other libraries already, it could
+    # contain things from outside of there too. We aren't concerned about
+    # third-party code here, just standard library types. We start with a
+    # blacklist of things to exclude, but if that gets out of hand we can
+    # figure out a better whitelisting.
     UNVERIFIABLE = {
         # This is declared to be an ISequence, but is missing lots of methods,
         # including some that aren't part of a language protocol, such as
         # ``index`` and ``count``.
         memoryview,
         # 'pkg_resources._vendor.pyparsing.ParseResults' is registered as a
-        # MutableMapping but is missing methods like ``popitem`` and ``setdefault``.
-        # It's imported due to namespace packages.
+        # MutableMapping but is missing methods like ``popitem`` and
+        # ``setdefault``.  It's imported due to namespace packages.
         'ParseResults',
-        # sqlite3.Row claims ISequence but also misses ``index`` and ``count``.
-        # It's imported because...? Coverage imports it, but why do we have it without
-        # coverage?
+        # sqlite3.Row claims ISequence but also misses ``index`` and
+        # ``count``.  It's imported because...? Coverage imports it, but why
+        # do we have it without coverage?
         'Row',
         # In Python 3.10 ``array.array`` appears as ``IMutableSequence`` but it
         # does not provide a ``clear()`` method and it cannot be instantiated
@@ -103,39 +82,27 @@ class TestVerifyClass(VerifyClassMixin, unittest.TestCase):
     if PYPY:
         UNVERIFIABLE.update({
             # collections.deque.pop() doesn't support the index= argument to
-            # MutableSequence.pop(). We can't verify this on CPython because we can't
-            # get the signature, but on PyPy we /can/ get the signature, and of course
-            # it doesn't match.
+            # MutableSequence.pop(). We can't verify this on CPython because
+            # we can't get the signature, but on PyPy we /can/ get the
+            # signature, and of course it doesn't match.
             deque,
             # Likewise for index
             range,
         })
-    if PY2:
-        # pylint:disable=undefined-variable,no-member
-        # There are a lot more types that are fundamentally unverifiable on Python 2.
-        UNVERIFIABLE.update({
-            # Missing several key methods like __getitem__
-            basestring,
-            # Missing __iter__ and __contains__, hard to construct.
-            buffer,
-            # Missing ``__contains__``, ``count`` and ``index``.
-            xrange,
-            # These two are missing Set.isdisjoint()
-            type({}.viewitems()),
-            type({}.viewkeys()),
-        })
-        NON_STRICT_RO = {
-        }
-    else:
-        UNVERIFIABLE_RO = {
-            # ``array.array`` fails the ``test_auto_ro_*`` tests with and
-            # without strict RO but only on Windows (AppVeyor) on Python 3.10.0
-            # (in older versions ``array.array`` does not appear as
-            # ``IMutableSequence``).
-            array.array,
-        }
+    UNVERIFIABLE_RO = {
+        # ``array.array`` fails the ``test_auto_ro_*`` tests with and
+        # without strict RO but only on Windows (AppVeyor) on Python 3.10.0
+        # (in older versions ``array.array`` does not appear as
+        # ``IMutableSequence``).
+        array.array,
+    }
+
 
 add_abc_interface_tests(TestVerifyClass, collections.ISet.__module__)
+
+
+def _get_FrameLocalsProxy():
+    return type(sys._getframe().f_locals)
 
 
 class TestVerifyObject(VerifyObjectMixin,
@@ -154,7 +121,7 @@ class TestVerifyObject(VerifyObjectMixin,
         type(iter({}.keys())): lambda: iter({}.keys()),
         type(iter({}.items())): lambda: iter({}.items()),
         type(iter({}.values())): lambda: iter({}.values()),
-        type((i for i in range(1))): lambda: (i for i in range(3)),
+        type(i for i in range(1)): lambda: (i for i in range(3)),
         type(iter([])): lambda: iter([]),
         type(reversed([])): lambda: reversed([]),
         'longrange_iterator': unittest.SkipTest,
@@ -165,17 +132,16 @@ class TestVerifyObject(VerifyObjectMixin,
         'async_generator': unittest.SkipTest,
         type(iter(tuple())): lambda: iter(tuple()),
     }
+    if sys.version_info >= (3, 13):
+        def FrameLocalsProxy_constructor():
+            return _get_FrameLocalsProxy()(sys._getframe())
+        FrameLocalsProxy = _get_FrameLocalsProxy()
+        CONSTRUCTORS[FrameLocalsProxy] = FrameLocalsProxy_constructor
 
-    if PY2:
-        # pylint:disable=undefined-variable,no-member
-        CONSTRUCTORS.update({
-            collections.IValuesView: {}.viewvalues,
-        })
-    else:
-        UNVERIFIABLE_RO = {
-            # ``array.array`` fails the ``test_auto_ro_*`` tests with and
-            # without strict RO but only on Windows (AppVeyor) on Python 3.10.0
-            # (in older versions ``array.array`` does not appear as
-            # ``IMutableSequence``).
-            array.array,
-        }
+    UNVERIFIABLE_RO = {
+        # ``array.array`` fails the ``test_auto_ro_*`` tests with and
+        # without strict RO but only on Windows (AppVeyor) on Python 3.10.0
+        # (in older versions ``array.array`` does not appear as
+        # ``IMutableSequence``).
+        array.array,
+    }

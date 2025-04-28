@@ -14,7 +14,10 @@
 """Resolution ordering utility tests"""
 import unittest
 
-# pylint:disable=blacklisted-name,protected-access,attribute-defined-outside-init
+
+# pylint:disable=blacklisted-name
+# pylint:disable=protected-access
+# pylint:disable=attribute-defined-outside-init
 
 class Test__mergeOrderings(unittest.TestCase):
 
@@ -47,81 +50,108 @@ class Test__flatten(unittest.TestCase):
         return _legacy_flatten(ob)
 
     def test_w_empty_bases(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         foo = Foo()
         foo.__bases__ = ()
         self.assertEqual(self._callFUT(foo), [foo])
 
     def test_w_single_base(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         self.assertEqual(self._callFUT(Foo), [Foo, object])
 
     def test_w_bases(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         class Bar(Foo):
             pass
+
         self.assertEqual(self._callFUT(Bar), [Bar, Foo, object])
 
     def test_w_diamond(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         class Bar(Foo):
             pass
+
         class Baz(Foo):
             pass
+
         class Qux(Bar, Baz):
             pass
+
         self.assertEqual(self._callFUT(Qux),
                          [Qux, Bar, Foo, object, Baz, Foo, object])
 
 
 class Test_ro(unittest.TestCase):
     maxDiff = None
+
     def _callFUT(self, ob, **kwargs):
         from zope.interface.ro import _legacy_ro
         return _legacy_ro(ob, **kwargs)
 
     def test_w_empty_bases(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         foo = Foo()
         foo.__bases__ = ()
         self.assertEqual(self._callFUT(foo), [foo])
 
     def test_w_single_base(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         self.assertEqual(self._callFUT(Foo), [Foo, object])
 
     def test_w_bases(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         class Bar(Foo):
             pass
+
         self.assertEqual(self._callFUT(Bar), [Bar, Foo, object])
 
     def test_w_diamond(self):
-        class Foo(object):
+
+        class Foo:
             pass
+
         class Bar(Foo):
             pass
+
         class Baz(Foo):
             pass
+
         class Qux(Bar, Baz):
             pass
+
         self.assertEqual(self._callFUT(Qux),
                          [Qux, Bar, Baz, Foo, object])
 
     def _make_IOErr(self):
         # This can't be done in the standard C3 ordering.
-        class Foo(object):
+
+        class Foo:
             def __init__(self, name, *bases):
                 self.__name__ = name
                 self.__bases__ = bases
-            def __repr__(self): # pragma: no cover
+
+            def __repr__(self):  # pragma: no cover
                 return self.__name__
 
         # Mimic what classImplements(IOError, IIOError)
@@ -144,22 +174,22 @@ class Test_ro(unittest.TestCase):
         # https://github.com/zopefoundation/zope.interface/issues/8
         # This test should fail, but doesn't, as described in that issue.
         # pylint:disable=inherit-non-class
-        from zope.interface import implementer
         from zope.interface import Interface
-        from zope.interface import providedBy
         from zope.interface import implementedBy
+        from zope.interface import implementer
+        from zope.interface import providedBy
 
         class IFoo(Interface):
             pass
 
         @implementer(IFoo)
-        class ImplementsFoo(object):
+        class ImplementsFoo:
             pass
 
         class ExtendsFoo(ImplementsFoo):
             pass
 
-        class ImplementsNothing(object):
+        class ImplementsNothing:
             pass
 
         class ExtendsFooImplementsNothing(ExtendsFoo, ImplementsNothing):
@@ -176,7 +206,7 @@ class Test_ro(unittest.TestCase):
              implementedBy(object)])
 
 
-class C3Setting(object):
+class C3Setting:
 
     def __init__(self, setting, value):
         self._setting = setting
@@ -190,6 +220,7 @@ class C3Setting(object):
         from zope.interface import ro
         setattr(ro.C3, self._setting.__name__, self._setting)
 
+
 class Test_c3_ro(Test_ro):
 
     def setUp(self):
@@ -202,19 +233,24 @@ class Test_c3_ro(Test_ro):
         from zope.interface.ro import ro
         return ro(ob, **kwargs)
 
-    def test_complex_diamond(self, base=object):
+    def _make_complex_diamond(self, base):
         # https://github.com/zopefoundation/zope.interface/issues/21
-        O = base
-        class F(O):
+
+        class F(base):
             pass
-        class E(O):
+
+        class E(base):
             pass
-        class D(O):
+
+        class D(base):
             pass
+
         class C(D, F):
             pass
+
         class B(D, E):
             pass
+
         class A(B, C):
             pass
 
@@ -223,10 +259,13 @@ class Test_c3_ro(Test_ro):
 
         return A
 
+    def test_complex_diamond_object(self):
+        self._make_complex_diamond(object)
+
     def test_complex_diamond_interface(self):
         from zope.interface import Interface
 
-        IA = self.test_complex_diamond(Interface)
+        IA = self._make_complex_diamond(Interface)
 
         self.assertEqual(
             [x.__name__ for x in IA.__iro__],
@@ -236,7 +275,7 @@ class Test_c3_ro(Test_ro):
     def test_complex_diamond_use_legacy_argument(self):
         from zope.interface import Interface
 
-        A = self.test_complex_diamond(Interface)
+        A = self._make_complex_diamond(Interface)
         legacy_A_iro = self._callFUT(A, use_legacy_ro=True)
         self.assertNotEqual(A.__iro__, legacy_A_iro)
 
@@ -246,7 +285,7 @@ class Test_c3_ro(Test_ro):
     def test_complex_diamond_compare_legacy_argument(self):
         from zope.interface import Interface
 
-        A = self.test_complex_diamond(Interface)
+        A = self._make_complex_diamond(Interface)
         computed_A_iro = self._callFUT(A, log_changed_ro=True)
         # It matches, of course, but we did log a warning.
         self.assertEqual(tuple(computed_A_iro), A.__iro__)
@@ -257,8 +296,8 @@ class Test_c3_ro(Test_ro):
         self.assertEqual(1, len(handler.records))
         record = handler.records[0]
 
-        self.assertEqual('\n'.join(l.rstrip() for l in record.getMessage().splitlines()), """\
-Object <InterfaceClass zope.interface.tests.test_ro.A> has different legacy and C3 MROs:
+        expected = """\
+Object <InterfaceClass {name}> has different legacy and C3 MROs:
   Legacy RO (len=7)                 C3 RO (len=7; inconsistent=no)
   ==================================================================
     zope.interface.tests.test_ro.A    zope.interface.tests.test_ro.A
@@ -268,13 +307,22 @@ Object <InterfaceClass zope.interface.tests.test_ro.A> has different legacy and 
     zope.interface.tests.test_ro.D    zope.interface.tests.test_ro.D
                                     + zope.interface.tests.test_ro.E
     zope.interface.tests.test_ro.F    zope.interface.tests.test_ro.F
-    zope.interface.Interface          zope.interface.Interface""")
+    zope.interface.Interface          zope.interface.Interface""".format(
+            name="zope.interface.tests.test_ro.A"
+        )
+
+        self.assertEqual(
+            '\n'.join(ln.rstrip() for ln in record.getMessage().splitlines()),
+            expected,
+        )
 
     def test_ExtendedPathIndex_implement_thing_implementedby_super(self):
-        # See https://github.com/zopefoundation/zope.interface/pull/182#issuecomment-598754056
+        # See
+        # https://github.com/zopefoundation/zope.interface/pull/182#issuecomment-598754056
         from zope.interface import ro
+
         # pylint:disable=inherit-non-class
-        class _Based(object):
+        class _Based:
             __bases__ = ()
 
             def __init__(self, name, bases=(), attrs=None):
@@ -311,12 +359,16 @@ Object <InterfaceClass zope.interface.tests.test_ro.A> has different legacy and 
         # @implementer(ILimitedResultIndex, IQueryIndex)
         # class ExtendedPathIndex(PathIndex):
         #     pass
-        ExtendedPathIndex = _Based('ExtendedPathIndex',
-                                   (ILimitedResultIndex, IQueryIndex, PathIndex))
+        ExtendedPathIndex = _Based(
+            'ExtendedPathIndex',
+            (ILimitedResultIndex, IQueryIndex, PathIndex)
+        )
 
         # We were able to resolve it, and in exactly the same way as
         # the legacy RO did, even though it is inconsistent.
-        result = self._callFUT(ExtendedPathIndex, log_changed_ro=True, strict=False)
+        result = self._callFUT(
+            ExtendedPathIndex, log_changed_ro=True, strict=False
+        )
         self.assertEqual(result, [
             ExtendedPathIndex,
             ILimitedResultIndex,
@@ -334,11 +386,8 @@ Object <InterfaceClass zope.interface.tests.test_ro.A> has different legacy and 
             self._callFUT(ExtendedPathIndex, strict=True)
 
     def test_OSError_IOError(self):
-        if OSError is not IOError:
-            # Python 2
-            self.skipTest("Requires Python 3 IOError == OSError")
-        from zope.interface.common import interfaces
         from zope.interface import providedBy
+        from zope.interface.common import interfaces
 
         self.assertEqual(
             list(providedBy(OSError()).flattened()),
@@ -353,6 +402,7 @@ Object <InterfaceClass zope.interface.tests.test_ro.A> has different legacy and 
 
     def test_non_orderable(self):
         import warnings
+
         from zope.interface import ro
         try:
             # If we've already warned, we must reset that state.
@@ -362,15 +412,23 @@ Object <InterfaceClass zope.interface.tests.test_ro.A> has different legacy and 
 
         with warnings.catch_warnings():
             warnings.simplefilter('error')
-            with C3Setting(ro.C3.WARN_BAD_IRO, True), C3Setting(ro.C3.STRICT_IRO, False):
+            with C3Setting(
+                ro.C3.WARN_BAD_IRO, True
+            ), C3Setting(
+                ro.C3.STRICT_IRO, False
+            ):
                 with self.assertRaises(ro.InconsistentResolutionOrderWarning):
-                    super(Test_c3_ro, self).test_non_orderable()
+                    super().test_non_orderable()
 
         IOErr, _ = self._make_IOErr()
         with self.assertRaises(ro.InconsistentResolutionOrderError):
             self._callFUT(IOErr, strict=True)
 
-        with C3Setting(ro.C3.TRACK_BAD_IRO, True), C3Setting(ro.C3.STRICT_IRO, False):
+        with C3Setting(
+            ro.C3.TRACK_BAD_IRO, True
+        ), C3Setting(
+            ro.C3.STRICT_IRO, False
+        ):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
                 self._callFUT(IOErr)
@@ -387,7 +445,10 @@ class TestC3(unittest.TestCase):
         return C3.resolver(C, strict, base_mros)
 
     def test_base_mros_given(self):
-        c3 = self._makeOne(type(self), base_mros={unittest.TestCase: unittest.TestCase.__mro__})
+        c3 = self._makeOne(
+            type(self),
+            base_mros={unittest.TestCase: unittest.TestCase.__mro__}
+        )
         memo = c3.memo
         self.assertIn(unittest.TestCase, memo)
         # We used the StaticMRO class
@@ -397,14 +458,14 @@ class TestC3(unittest.TestCase):
         c3 = self._makeOne(type(self))
         # Even though we didn't call .mro() yet, the MRO has been
         # computed.
-        self.assertIsNotNone(c3._C3__mro) # pylint:disable=no-member
+        self.assertIsNotNone(c3._C3__mro)  # pylint:disable=no-member
         c3._merge = None
         self.assertEqual(c3.mro(), list(type(self).__mro__))
 
 
 class Test_ROComparison(unittest.TestCase):
 
-    class MockC3(object):
+    class MockC3:
         direct_inconsistency = False
         bases_had_inconsistency = False
 

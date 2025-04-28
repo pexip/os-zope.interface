@@ -25,11 +25,8 @@ models, object-relational persistence, aspect-oriented programming, and more.
 Visit the PEAK home page at http://peak.telecommunity.com for more information.
 """
 
-import unittest
 import sys
-
-from zope.interface._compat import _skip_under_py2
-from zope.interface._compat import _skip_under_py3k
+import unittest
 
 
 class FrameInfoTest(unittest.TestCase):
@@ -40,23 +37,9 @@ class FrameInfoTest(unittest.TestCase):
          f_locals, f_globals) = advisory_testing.moduleLevelFrameInfo
         self.assertEqual(kind, "module")
         for d in module.__dict__, f_locals, f_globals:
-            self.assertTrue(d is advisory_testing.my_globals)
+            self.assertIs(d, advisory_testing.my_globals)
 
-    @_skip_under_py3k
-    def test_w_ClassicClass(self):
-        from zope.interface.tests import advisory_testing
-        (kind,
-         module,
-         f_locals,
-         f_globals) = advisory_testing.ClassicClass.classLevelFrameInfo
-        self.assertEqual(kind, "class")
-
-        self.assertTrue(
-            f_locals is advisory_testing.ClassicClass.__dict__)  # ???
-        for d in module.__dict__, f_globals:
-            self.assertTrue(d is advisory_testing.my_globals)
-
-    def test_w_NewStyleClass(self):
+    def test_w_class(self):
         from zope.interface.tests import advisory_testing
         (kind,
          module,
@@ -65,15 +48,19 @@ class FrameInfoTest(unittest.TestCase):
         self.assertEqual(kind, "class")
 
         for d in module.__dict__, f_globals:
-            self.assertTrue(d is advisory_testing.my_globals)
+            self.assertIs(d, advisory_testing.my_globals)
 
     def test_inside_function_call(self):
         from zope.interface.advice import getFrameInfo
         kind, module, f_locals, f_globals = getFrameInfo(sys._getframe())
         self.assertEqual(kind, "function call")
-        self.assertTrue(f_locals is locals()) # ???
+
+        frame = sys._getframe()
+        self.assertEqual(f_locals, frame.f_locals)
+        self.assertEqual(f_locals, locals())
+
         for d in module.__dict__, f_globals:
-            self.assertTrue(d is globals())
+            self.assertIs(d, globals())
 
     def test_inside_exec(self):
         from zope.interface.advice import getFrameInfo
@@ -81,91 +68,15 @@ class FrameInfoTest(unittest.TestCase):
         _locals = {}
         exec(_FUNKY_EXEC, _globals, _locals)
         self.assertEqual(_locals['kind'], "exec")
-        self.assertTrue(_locals['f_locals'] is _locals)
-        self.assertTrue(_locals['module'] is None)
-        self.assertTrue(_locals['f_globals'] is _globals)
+        self.assertIs(_locals['f_locals'], _locals)
+        self.assertIsNone(_locals['module'])
+        self.assertIs(_locals['f_globals'], _globals)
 
 
 _FUNKY_EXEC = """\
 import sys
 kind, module, f_locals, f_globals = getFrameInfo(sys._getframe())
 """
-
-class AdviceTests(unittest.TestCase):
-
-    @_skip_under_py3k
-    def test_order(self):
-        from zope.interface.tests.advisory_testing import ping
-        log = []
-        class Foo(object):
-            ping(log, 1)
-            ping(log, 2)
-            ping(log, 3)
-
-        # Strip the list nesting
-        for i in 1, 2, 3:
-            self.assertTrue(isinstance(Foo, list))
-            Foo, = Foo
-
-        self.assertEqual(log, [(1, Foo), (2, [Foo]), (3, [[Foo]])])
-
-    @_skip_under_py3k
-    def test_single_explicit_meta(self):
-        from zope.interface.tests.advisory_testing import ping
-
-        class Metaclass(type):
-            pass
-
-        class Concrete(Metaclass):
-            __metaclass__ = Metaclass
-            ping([],1)
-
-        Concrete, = Concrete
-        self.assertTrue(Concrete.__class__ is Metaclass)
-
-
-    @_skip_under_py3k
-    def test_mixed_metas(self):
-        from zope.interface.tests.advisory_testing import ping
-
-        class Metaclass1(type):
-            pass
-
-        class Metaclass2(type):
-            pass
-
-        class Base1:
-            __metaclass__ = Metaclass1
-
-        class Base2:
-            __metaclass__ = Metaclass2
-
-        try:
-            class Derived(Base1, Base2):
-                ping([], 1)
-            self.fail("Should have gotten incompatibility error")
-        except TypeError:
-            pass
-
-        class Metaclass3(Metaclass1, Metaclass2):
-            pass
-
-        class Derived(Base1, Base2):
-            __metaclass__ = Metaclass3
-            ping([], 1)
-
-        self.assertTrue(isinstance(Derived, list))
-        Derived, = Derived
-        self.assertTrue(isinstance(Derived, Metaclass3))
-
-    @_skip_under_py3k
-    def test_meta_no_bases(self):
-        from zope.interface.tests.advisory_testing import ping
-        from types import ClassType
-        class Thing:
-            ping([], 1)
-        klass, = Thing # unpack list created by pong
-        self.assertEqual(type(klass), ClassType)
 
 
 class Test_isClassAdvisor(unittest.TestCase):
@@ -178,13 +89,17 @@ class Test_isClassAdvisor(unittest.TestCase):
         self.assertEqual(self._callFUT(self), False)
 
     def test_w_normal_function(self):
+
         def foo():
             raise NotImplementedError()
+
         self.assertEqual(self._callFUT(foo), False)
 
     def test_w_advisor_function(self):
+
         def bar():
             raise NotImplementedError()
+
         bar.previousMetaclass = object()
         self.assertEqual(self._callFUT(bar), True)
 
@@ -195,111 +110,60 @@ class Test_determineMetaclass(unittest.TestCase):
         from zope.interface.advice import determineMetaclass
         return determineMetaclass(*args, **kw)
 
-    @_skip_under_py3k
-    def test_empty(self):
-        from types import ClassType
-        self.assertEqual(self._callFUT(()), ClassType)
-
     def test_empty_w_explicit_metatype(self):
+
         class Meta(type):
             pass
+
         self.assertEqual(self._callFUT((), Meta), Meta)
 
     def test_single(self):
+
         class Meta(type):
             pass
+
         self.assertEqual(self._callFUT((Meta,)), type)
 
-    @_skip_under_py3k
     def test_meta_of_class(self):
+
         class Metameta(type):
             pass
 
-        class Meta(type):
-            __metaclass__ = Metameta
+        class Meta(type, metaclass=Metameta):
+            pass
 
         self.assertEqual(self._callFUT((Meta, type)), Metameta)
 
-    @_skip_under_py2
-    def test_meta_of_class_py3k(self):
-        # Work around SyntaxError under Python2.
-        EXEC = '\n'.join([
-        'class Metameta(type):',
-        '    pass',
-        'class Meta(type, metaclass=Metameta):',
-        '    pass',
-        ])
-        globs = {}
-        exec(EXEC, globs)
-        Meta = globs['Meta']
-        Metameta = globs['Metameta']
+    def test_multiple_in_hierarchy_py3k(self):
 
-        self.assertEqual(self._callFUT((Meta, type)), Metameta)
-
-    @_skip_under_py3k
-    def test_multiple_in_hierarchy(self):
         class Meta_A(type):
             pass
+
         class Meta_B(Meta_A):
             pass
-        class A(type):
-            __metaclass__ = Meta_A
-        class B(type):
-            __metaclass__ = Meta_B
-        self.assertEqual(self._callFUT((A, B,)), Meta_B)
 
-    @_skip_under_py2
-    def test_multiple_in_hierarchy_py3k(self):
-        # Work around SyntaxError under Python2.
-        EXEC = '\n'.join([
-        'class Meta_A(type):',
-        '    pass',
-        'class Meta_B(Meta_A):',
-        '    pass',
-        'class A(type, metaclass=Meta_A):',
-        '    pass',
-        'class B(type, metaclass=Meta_B):',
-        '    pass',
-        ])
-        globs = {}
-        exec(EXEC, globs)
-        Meta_A = globs['Meta_A']
-        Meta_B = globs['Meta_B']
-        A = globs['A']
-        B = globs['B']
+        class A(type, metaclass=Meta_A):
+            pass
+
+        class B(type, metaclass=Meta_B):
+            pass
+
         self.assertEqual(self._callFUT((A, B)), Meta_B)
 
-    @_skip_under_py3k
-    def test_multiple_not_in_hierarchy(self):
+    def test_multiple_not_in_hierarchy_py3k(self):
+
         class Meta_A(type):
             pass
+
         class Meta_B(type):
             pass
-        class A(type):
-            __metaclass__ = Meta_A
-        class B(type):
-            __metaclass__ = Meta_B
-        self.assertRaises(TypeError, self._callFUT, (A, B,))
 
-    @_skip_under_py2
-    def test_multiple_not_in_hierarchy_py3k(self):
-        # Work around SyntaxError under Python2.
-        EXEC = '\n'.join([
-        'class Meta_A(type):',
-        '    pass',
-        'class Meta_B(type):',
-        '    pass',
-        'class A(type, metaclass=Meta_A):',
-        '    pass',
-        'class B(type, metaclass=Meta_B):',
-        '    pass',
-        ])
-        globs = {}
-        exec(EXEC, globs)
-        Meta_A = globs['Meta_A']
-        Meta_B = globs['Meta_B']
-        A = globs['A']
-        B = globs['B']
+        class A(type, metaclass=Meta_A):
+            pass
+
+        class B(type, metaclass=Meta_B):
+            pass
+
         self.assertRaises(TypeError, self._callFUT, (A, B))
 
 
@@ -312,35 +176,30 @@ class Test_minimalBases(unittest.TestCase):
     def test_empty(self):
         self.assertEqual(self._callFUT([]), [])
 
-    @_skip_under_py3k
-    def test_w_oldstyle_meta(self):
-        class C:
-            pass
-        self.assertEqual(self._callFUT([type(C)]), [])
-
-    @_skip_under_py3k
-    def test_w_oldstyle_class(self):
-        class C:
-            pass
-        self.assertEqual(self._callFUT([C]), [C])
-
     def test_w_newstyle_meta(self):
         self.assertEqual(self._callFUT([type]), [type])
 
     def test_w_newstyle_class(self):
-        class C(object):
+
+        class C:
             pass
+
         self.assertEqual(self._callFUT([C]), [C])
 
     def test_simple_hierarchy_skips_implied(self):
-        class A(object):
+
+        class A:
             pass
+
         class B(A):
             pass
+
         class C(B):
             pass
-        class D(object):
+
+        class D:
             pass
+
         self.assertEqual(self._callFUT([A, B, C]), [C])
         self.assertEqual(self._callFUT([A, C]), [C])
         self.assertEqual(self._callFUT([B, C]), [C])
@@ -348,8 +207,11 @@ class Test_minimalBases(unittest.TestCase):
         self.assertEqual(self._callFUT([D, B, D]), [B, D])
 
     def test_repeats_kicked_to_end_of_queue(self):
-        class A(object):
+
+        class A:
             pass
-        class B(object):
+
+        class B:
             pass
+
         self.assertEqual(self._callFUT([A, B, A]), [B, A])
